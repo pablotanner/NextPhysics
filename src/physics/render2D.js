@@ -43,7 +43,7 @@ export default function Render2D({selectedTool, setSelectedTool}) {
                 const position = new Vector({x: x-size/2, y: y-size/2, z: 0})
                 shape = new AABB(position, new Vector({x: x+size/2, y: y+size/2, z: 0}));
             }
-            else if (selectedTool === "select"){
+            else if (selectedTool === "plane"){
                 const d = event.clientY - rect.top;
                 shape = new Plane(new Vector({x: 0, y: 1, z: 0}), d)
             }

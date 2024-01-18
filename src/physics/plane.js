@@ -73,8 +73,9 @@ constructor(normal, distance) {
     draw(ctx){
         const yIntercept = this._distance;
         ctx.beginPath();
+        ctx.strokeStyle = this._color;
         ctx.moveTo(0, yIntercept);
-        ctx.lineTo(1200, yIntercept);
+        ctx.lineTo(1500, yIntercept);
         ctx.stroke();
     }
 }

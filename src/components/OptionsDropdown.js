@@ -1,7 +1,8 @@
 "use client"
 import { Menu, Transition } from '@headlessui/react'
 import { Fragment, useEffect, useRef, useState } from 'react'
-import {ChevronDownIcon, CursorArrowRaysIcon, Squares2X2Icon, TrashIcon} from '@heroicons/react/20/solid'
+import {ChevronDownIcon, CursorArrowRaysIcon, MinusIcon, TrashIcon} from '@heroicons/react/20/solid'
+import {StopIcon} from "@heroicons/react/16/solid";
 
 
 export default function OptionsDropdown({selectedTool, setSelectedTool}) {
@@ -48,7 +49,7 @@ export default function OptionsDropdown({selectedTool, setSelectedTool}) {
                                             onClick={() => setSelectedTool("circle")}
                                     >
                                         <CircleIcon
-                                            className="mr-2"
+                                            className="mr-2 h-5 w-5"
                                             aria-hidden="true"
                                             active={active}
                                         />
@@ -61,12 +62,26 @@ export default function OptionsDropdown({selectedTool, setSelectedTool}) {
                                     <button className={`${active ? 'bg-violet-500 text-white' : 'text-gray-900'} group flex rounded-md items-center w-full px-2 py-2 text-sm`}
                                             onClick={() => setSelectedTool("square")}
                                     >
-                                        <SquareIcon
-                                            className="mr-2 ml-0.45"
+                                        <StopIcon
+                                            className="mr-2 h-5 w-5"
                                             aria-hidden="true"
                                             active={active}
                                         />
                                         Place Square
+                                    </button>
+                                )}
+                            </Menu.Item>
+                            <Menu.Item>
+                                {({active}) => (
+                                    <button className={`${active ? 'bg-violet-500 text-white' : 'text-gray-900'} group flex rounded-md items-center w-full px-2 py-2 text-sm`}
+                                            onClick={() => setSelectedTool("plane")}
+                                    >
+                                        <MinusIcon
+                                            className="mr-2 h-5 w-5"
+                                            aria-hidden="true"
+                                            active={active}
+                                        />
+                                        Place Floor
                                     </button>
                                 )}
                             </Menu.Item>
@@ -94,18 +109,13 @@ export default function OptionsDropdown({selectedTool, setSelectedTool}) {
 }
 
 
-function SquareIcon(props) {
-    return (
-        <svg width="20" height="20" xmlns="http://www.w3.org/2000/svg" fill="none" {...props}>
-            <rect width="20" height="20" strokeWidth="3px" stroke={props.active ? "white" : "black" } />
-        </svg>
-    )
-}
+
 
 function CircleIcon(props) {
     return (
-        <svg width="24" height="24" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
-            <circle cx="12" cy="12" r="11" strokeWidth="1.25px" stroke={props.active ? "white" : "black" } />
-        </svg>
-    )
+    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" {...props}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+    </svg>
+
+)
 }

@@ -1,9 +1,11 @@
-import {AbstractObject} from "@/physics/abstractObject";
+import PhysicsObject from "./physicsObject";
 import IntersectData from "@/physics/intersectData";
 import Vector from "@/physics/vector";
+import BoundingSphere from "@/physics/boundingSphere";
+import AABB from "@/physics/aabb";
 
 
-export default class Plane extends AbstractObject {
+export default class Plane extends PhysicsObject {
 constructor(normal, distance) {
         super(normal, 0, 0, 0, "black");
         this._normal = normal;
@@ -53,14 +55,13 @@ constructor(normal, distance) {
     }
 
     intersectAABB(aabb) {
-        const aabbMin = aabb.minExtents;
-        const aabbMax = aabb.maxExtents;
+        const center = aabb._minExtents.clone().add(aabb._maxExtents).divide(2);
+        const extents = aabb._maxExtents.clone().subtract(center);
 
-        // Get the distance from the AABB's center to the plane
-        const signedDistance = this._normal.getDotProduct(aabbMin) - this._distance;
+        const r = extents.vector.x * Math.abs(this._normal.vector.x) + extents.vector.y * Math.abs(this._normal.vector.y) + extents.vector.z * Math.abs(this._normal.vector.z);
+        const s = this._normal.getDotProduct(center) - this._distance;
 
-        // If the absolute value of the distance is less than the sphere's radius, the sphere and the plane are intersecting
-        return new IntersectData(Math.abs(signedDistance) < 0, Math.abs(signedDistance));
+        return new IntersectData(Math.abs(s) <= r, s - r);
     }
 
     intersectPlane(plane) {
@@ -68,6 +69,18 @@ constructor(normal, distance) {
 
         // If the absolute value of the distance is less than the sphere's radius, the sphere and the plane are intersecting
         return new IntersectData(Math.abs(signedDistance) < 0, Math.abs(signedDistance));
+    }
+
+    intersect(other) {
+        if (other instanceof BoundingSphere) {
+            return this.intersectSphere(other);
+        } else if (other instanceof AABB) {
+            return this.intersectAABB(other);
+        } else if (other instanceof Plane) {
+            return this.intersectPlane(other);
+        } else if (other instanceof Vector) {
+            return this.intersectPoint(other);
+        }
     }
 
     draw(ctx){

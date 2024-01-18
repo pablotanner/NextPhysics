@@ -4,10 +4,14 @@ import Vector from "./vector.js";
 import { useEffect, useState } from "react";
 import AABB from "./aabb.js";
 import Plane from "@/physics/plane";
+import PhysicsEngine from "@/physics/physicsEngine";
 
 export default function Render2D({selectedTool, setSelectedTool}) {
     const size = 30;
     const [shapes, setShapes] = useState([]);
+
+    console.log(shapes)
+
     const resetCanvas = () => {
         setShapes([]);
         setSelectedTool("select");
@@ -51,61 +55,15 @@ export default function Render2D({selectedTool, setSelectedTool}) {
                 return;
             }
             shapes.every(s => {
-                if (s instanceof BoundingSphere){
-                    const intersectData = shape.intersectSphere(s);
-                    console.log(intersectData)
-                    if (intersectData.doesIntersect){
-                        shape.color = "red";
-                        return false;
-                    }
-                    else {
-                        return true;
-                    }
+                const intersectData = shape.intersect(s);
+                if (intersectData.doesIntersect){
+                    shape.color = "red";
+                    return false;
                 }
-                else if (s instanceof AABB){
-                    const intersectData = shape.intersectAABB(s);
-                    if (intersectData.doesIntersect){
-                        shape.color = "red";
-                        return false;
-                    }
-                    else {
-                        return true;
-                    }
-                }
-                else if (s instanceof Plane){
-                    const intersectData = shape.intersectPlane(s);
-                    console.log(intersectData)
-                    if (intersectData.doesIntersect){
-                        shape.color = "red";
-                        return false;
-                    }
-                    else {
-                        return true;
-                    }
+                else {
+                    return true;
                 }
             })
-
-            /*
-            let doesIntersect = false;
-            spheres.every(s => {
-                const intersectData = s.intersectBoundingSphere(sphere);
-                   if (intersectData.doesIntersect){
-                        doesIntersect = true;
-                        return false;
-                    }
-                    else {
-                        return true;
-                }
-            })
-            if (doesIntersect){
-                //sphere.color = `#${Math.floor(Math.random()*16777215).toString(16)}`;
-                sphere.color = "red";
-            }
-            else {
-                sphere.color = "black";
-            }
-
-             */
             setShapes([...shapes, shape]);
         }
 
@@ -117,28 +75,47 @@ export default function Render2D({selectedTool, setSelectedTool}) {
                 const intersectData = shape.intersectPoint(position)
                 if (intersectData.doesIntersect){
                     setShapes(shapes.filter(s => s !== shape));
-                }
+                    /*
+                    shape.velocity = new Vector({x:5, y: 5, z: 0});
+                    shape.integrate(1/60);
 
+                     */
+                }
             });
             event.preventDefault();
         }
 
+        function simulate(event) {
+            return
+            /*
+            const gravity = new Vector({x: 0, y: 9.8, z: 0});
+            const deltaTime = 1/60;
+            const engine = new PhysicsEngine();
+            shapes.forEach(shape => {
+                shape.force = gravity.multiply(shape.mass);
+                engine.addObject(shape);
+            })
+            engine.integrate(deltaTime);
+            setShapes(engine.objects);
+            
+             */
+        }
+
         // Add click event listener
         canvas.addEventListener('click', handleClick);
-
-
+        canvas.addEventListener('mousedown', simulate);
         canvas.addEventListener('contextmenu', handleElementSelect);
 
         // Cleanup function
         return () => {
             canvas.removeEventListener('click', handleClick);
             canvas.removeEventListener('contextmenu', handleElementSelect);
+            //canvas.removeEventListener('mousedown', simulate);
         };
 
     }, [shapes,selectedTool]);
 
     useEffect(() => {
-
         const canvas = document.getElementById('physicsCanvas');
         const ctx = canvas.getContext('2d');
         ctx.clearRect(0, 0, canvas.width, canvas.height);

@@ -1,8 +1,10 @@
+import PhysicsObject from "./physicsObject.js";
 import Vector from "./vector.js";
 import IntersectData from "./intersectData.js";
-import {AbstractObject} from "./abstractObject.js";
+import BoundingSphere from "@/physics/boundingSphere";
+import Plane from "@/physics/plane";
 
-export default class AABB extends AbstractObject{
+export default class AABB extends PhysicsObject{
     constructor(minExtents, maxExtents){
         super(minExtents, new Vector({x: 0, y: 0}), 1, 1, "black");
         this._minExtents = minExtents;
@@ -97,6 +99,30 @@ export default class AABB extends AbstractObject{
 
     }
 
+    intersectPlane(plane){
+        const center = this._minExtents.clone().add(this._maxExtents).divide(2);
+        const extents = this._maxExtents.clone().subtract(center);
+
+        const r = extents.vector.x * Math.abs(plane.normal.vector.x) + extents.vector.y * Math.abs(plane.normal.vector.y) + extents.vector.z * Math.abs(plane.normal.vector.z);
+        const s = plane.normal.getDotProduct(center) - plane.distance;
+
+        return new IntersectData(Math.abs(s) <= r, s - r);
+    }
+
+    intersect(other) {
+        if (other instanceof BoundingSphere) {
+            return this.intersectSphere(other);
+        } else if (other instanceof AABB) {
+            return this.intersectAABB(other);
+        } else if (other instanceof Plane) {
+            return this.intersectPlane(other);
+        }
+        else if (other instanceof Vector) {
+            return this.intersectPoint(other);
+        }
+    }
+
+
     draw(ctx){
         const width = this._maxExtents.vector.x - this._minExtents.vector.x;
         const height = this._maxExtents.vector.y - this._minExtents.vector.y;
@@ -106,21 +132,6 @@ export default class AABB extends AbstractObject{
         ctx.fill();
     }
 
-    intersectPlane(plane){
-        const min = this._minExtents.vector;
-        const max = this._maxExtents.vector;
-        const normal = plane.normal.vector;
-        const distance = plane.distance;
-
-        const x = normal.x > 0 ? min.x : max.x;
-        const y = normal.y > 0 ? min.y : max.y;
-        const z = normal.z > 0 ? min.z : max.z;
-
-        const distanceFromPlane = normal.x * x + normal.y * y + normal.z * z + distance;
-
-        return new IntersectData(distanceFromPlane < 0, distanceFromPlane);
-
-    }
 }
 
 /*

@@ -85,8 +85,6 @@ export default class Vector {
     }
 
     add(vector) {
-        console.log(this.vector, vector)
-        console.log(vector.getComponents())
         vector.getComponents().forEach((k) => {
             if (this.vector[k] !== undefined) {
                 this.vector[k] += vector.vector[k];

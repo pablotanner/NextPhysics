@@ -1,8 +1,10 @@
 import Vector from "./vector.js";
 import IntersectData from "./intersectData.js";
-import {AbstractObject} from "./abstractObject.js";
+import PhysicsObject from "./physicsObject.js";
+import Plane from "@/physics/plane";
+import AABB from "@/physics/aabb";
 
-export default class BoundingSphere extends AbstractObject {
+export default class BoundingSphere extends PhysicsObject {
     // Center is vector, radius is float
     constructor(center, radius) {
         super(center, new Vector({x: 0, y: 0}), 1, 1, "black");
@@ -67,6 +69,18 @@ export default class BoundingSphere extends AbstractObject {
         const distanceFromSphere = distanceFromSphereCenter - this._radius;
 
         return new IntersectData(distanceFromSphere < 0, distanceFromSphere);
+    }
+
+    intersect(other) {
+        if (other instanceof BoundingSphere) {
+            return this.intersectSphere(other);
+        } else if (other instanceof AABB) {
+            return this.intersectAABB(other);
+        } else if (other instanceof Plane) {
+            return this.intersectPlane(other);
+        } else if (other instanceof Vector) {
+            return this.intersectPoint(other);
+        }
     }
 
     draw(ctx){

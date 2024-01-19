@@ -7,7 +7,7 @@ import AABB from "@/physics/aabb";
 
 export default class Plane extends PhysicsObject {
 constructor(normal, distance) {
-        super(normal, 0, 0, 0, "black");
+        super(normal, new Vector({x:0 ,y:0, z:0}), 1, 1, "black");
         this._normal = normal;
         this._distance = distance;
         this._drag = 0;

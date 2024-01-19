@@ -22,7 +22,8 @@ export default function Render2D({selectedTool, setSelectedTool, settings, physi
 
     if(selectedTool === "reset" && shapes.length > 0) resetCanvas();
 
-    function collisionDetection(){
+    /*
+    function collisionDetection() {
         const intersections = []
         // Check for collisions and handle them
         for (let i = 0; i < physicsEngine.current.objects.length; i++) {
@@ -36,62 +37,62 @@ export default function Render2D({selectedTool, setSelectedTool, settings, physi
             }
         }
 
-        for (let i = 0; i < physicsEngine.current.objects.length; i++){
-            if (intersections.find(index => index === i) === undefined){
+        for (let i = 0; i < physicsEngine.current.objects.length; i++) {
+            if (intersections.find(index => index === i) === undefined) {
                 physicsEngine.current.objects[i].color = "black";
-            }
-            else {
+            } else {
                 physicsEngine.current.objects[i].color = "red";
             }
-
-        /*
+        }
+    }
+     */
+    function collisionDetection() {
+        const intersections = []
+        // Check for collisions and handle them
         for (let i = 0; i < physicsEngine.current.objects.length; i++) {
-            if (intersections[i] === undefined) continue;
-            else if (intersections[i].length === 0) physicsEngine.current.objects[i].color = "black";
-            for (let j = 0; j < intersections[i].length; j++) {
-                const object2 = physicsEngine.current.objects[intersections[i][j]];
+            const object1 = physicsEngine.current.objects[i];
+            for (let j = i + 1; j < physicsEngine.current.objects.length; j++) {
+                const object2 = physicsEngine.current.objects[j];
                 const intersectData = object1.intersect(object2);
-                const normal = intersectData.normal;
-                const distance = intersectData.distance;
-                const relativeVelocity = object1.velocity.clone().subtract(object2.velocity);
-                const relativeVelocityAlongNormal = relativeVelocity.getDotProduct(normal);
-                if (relativeVelocityAlongNormal > 0) {
-                    continue;
+                if (intersectData.doesIntersect) {
+                    intersections.push(i)
+                    intersections.push(j)
+
+                    // Calculate collision response
+                    const collisionDirection = object2.position.subtract(object1.position).normalize();
+                    const relativeVelocity = object1.velocity.subtract(object2.velocity);
+                    const velocityAlongNormal = relativeVelocity.getDotProduct(collisionDirection);
+
+                    if (velocityAlongNormal > 0) {
+                        // The objects are moving apart, no need to handle the collision
+                        continue;
+                    }
+
+                    const restitution = Math.min(object1.restitution, object2.restitution);
+                    let impulseMagnitude = -(1 + restitution) * velocityAlongNormal / ((1 / object1.mass)+ (1 / object2.mass));
+
+                    const maxImpulse = 1000;
+                    if (impulseMagnitude > maxImpulse) {
+                        impulseMagnitude = maxImpulse;
+                    }
+
+                    const impulse = collisionDirection.multiply(impulseMagnitude);
+
+
+                    object1.velocity = object1.velocity.clone().add(impulse.clone().multiply(1 / object1.mass));
+                    object2.velocity = object2.velocity.clone().subtract(impulse.clone().multiply(1/ object2.mass));
                 }
-                const restitution = 0.7;
-                const impulseMagnitude = -(1 + restitution) * relativeVelocityAlongNormal;
-                const impulse = normal.clone().multiply(impulseMagnitude);
-                object1.velocity = object1.velocity.clone().add(impulse.clone().divide(object1.mass));
-                object2.velocity = object2.velocity.clone().subtract(impulse.clone().divide(object2.mass));
-
-                // Move objects apart
-                const percent = 0.2;
-                const slop = 0.01;
-                const correction = Math.max(distance - slop, 0) / (object1.mass + object2.mass) * percent;
-                const correctionVector = normal.clone().multiply(correction);
-                object1.position = object1.position.clone().add(correctionVector.clone().multiply(object1.mass));
-                object2.position = object2.position.clone().subtract(correctionVector.clone().multiply(object2.mass));
-
-             */
             }
-
-                    /*
-             shapes.forEach((shape1, index1) => {
-                 let isIntersecting = false;
-                 shapes.forEach((shape2, index2) => {
-                     if (index1 !== index2) {
-                         const intersectData = shape1.intersect(shape2);
-                         if (intersectData.doesIntersect) {
-                             isIntersecting = true;
-                         }
-                     }
-                 });
-                 shape1.color = isIntersecting ? "red" : "black";
-             });
-
-              */
         }
 
+        for (let i = 0; i < physicsEngine.current.objects.length; i++) {
+            if (intersections.find(index => index === i) === undefined) {
+                physicsEngine.current.objects[i].color = "black";
+            } else {
+                physicsEngine.current.objects[i].color = "red";
+            }
+        }
+    }
 
 
 
@@ -114,9 +115,15 @@ export default function Render2D({selectedTool, setSelectedTool, settings, physi
                 object._force = gravity.clone().multiply(object.mass);
             });
 
+
             collisionDetection();
 
+
+
+
             physicsEngine.current.integrate(deltaTime, settingsRef);
+
+
 
 
 

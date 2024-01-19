@@ -17,9 +17,9 @@ export default class PhysicsEngine {
             this.objects.splice(index, 1);
         }
     }
-    integrate(deltaTime) {
+    integrate(deltaTime, settingsRef) {
         this.objects.forEach((object) => {
-            object.integrate(deltaTime);
+            object.integrate(deltaTime, settingsRef);
         });
     }
 }

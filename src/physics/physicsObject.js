@@ -8,6 +8,30 @@ export default class PhysicsObject {
         this._restitution = restitution;
         this._color = color;
         this._force = new Vector({x: 0, y: 0, z: 0});
+        this._drag = 1;
+        this._surfaceArea = 1;
+    }
+
+    get surfaceArea(){
+        return this._surfaceArea;
+    }
+
+    set surfaceArea(surfaceArea){
+        if (typeof surfaceArea !== "number") {
+            throw new Error("surfaceArea must be a number");
+        }
+        this._surfaceArea = surfaceArea;
+    }
+
+    get drag() {
+        return this._drag;
+    }
+
+    set drag(drag) {
+        if (typeof drag !== "number") {
+            throw new Error("drag must be a number");
+        }
+        this._drag = drag;
     }
 
     get force(){
@@ -103,19 +127,33 @@ export default class PhysicsObject {
 
 
     // based on velocity of PhysicsObject, update position (deltaTime is in seconds)
-    integrate(deltaTime){
+// based on velocity of PhysicsObject, update position (deltaTime is in seconds)
+    integrate(deltaTime, settingsRef){
+        // Calculate drag force
+        const velocityMagnitude = this._velocity.getLength();
+        let dragMagnitude = 0.5 * settingsRef.current.airDensity * this._drag * this._surfaceArea * velocityMagnitude * velocityMagnitude;
+
+        const maxDrag = 1000;
+        if (dragMagnitude > maxDrag){
+            dragMagnitude = maxDrag;
+        }
+        const dragForce = this._velocity.clone().normalize().multiply(-dragMagnitude);
+
+        // Calculate net force
+        const netForce = this._force.clone().add(dragForce);
+
         // Calculate acceleration from force and mass
-        const acceleration = this._force.divide(this._mass);
+        const acceleration = netForce.divide(this._mass);
 
         // Update velocity based on acceleration
-        this._velocity = this._velocity.add(acceleration.multiply(deltaTime));
+        this._velocity = this._velocity.clone().add(acceleration.multiply(deltaTime));
 
         // Update position based on velocity
-        this._position = this._position.add(this._velocity.multiply(deltaTime));
+        this._position = this._position.clone().add(this._velocity.clone().multiply(deltaTime));
+
 
         // Reset force for the next frame
         this._force = new Vector({x: 0, y: 0, z: 0});
     }
-
 }
 

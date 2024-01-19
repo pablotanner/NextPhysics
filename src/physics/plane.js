@@ -10,6 +10,8 @@ constructor(normal, distance) {
         super(normal, 0, 0, 0, "black");
         this._normal = normal;
         this._distance = distance;
+        this._drag = 0;
+        this._surfaceArea = 1;
     }
 
     get normal() {
@@ -40,12 +42,14 @@ constructor(normal, distance) {
 
     intersectSphere(sphere) {
         const normalizedNormal = this.normalized();
-        const distanceFromSphereCenter = Math.abs(normalizedNormal._normal.getDotProduct(sphere._center) - normalizedNormal._distance);
+        const distanceFromSphereCenter = normalizedNormal._normal.getDotProduct(sphere._center) - normalizedNormal._distance;
 
-        const distanceFromSphere = distanceFromSphereCenter - sphere.radius;
+        // Check if the sphere and the plane are intersecting
+        const doesIntersect = Math.abs(distanceFromSphereCenter) <= sphere.radius;
 
-        return new IntersectData(distanceFromSphere < 0, distanceFromSphere);
+        return new IntersectData(doesIntersect, distanceFromSphereCenter);
     }
+
     intersectPoint(pointVector) {
         // Get the distance from the point to the plane
         const signedDistance = this._normal.getDotProduct(pointVector) - this._distance;
@@ -80,6 +84,8 @@ constructor(normal, distance) {
             return this.intersectPlane(other);
         } else if (other instanceof Vector) {
             return this.intersectPoint(other);
+        } else {
+            throw new Error(other.constructor + " is not a valid object to intersect with a plane");
         }
     }
 

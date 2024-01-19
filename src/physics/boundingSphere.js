@@ -10,6 +10,8 @@ export default class BoundingSphere extends PhysicsObject {
         super(center, new Vector({x: 0, y: 0}), mass, 1, "black");
         this._center = center;
         this._radius = radius;
+        this._drag = 0.47;
+        this._surfaceArea = Math.PI * radius * radius;
     }
 
     get center() {
@@ -64,11 +66,18 @@ export default class BoundingSphere extends PhysicsObject {
     }
 
     intersectPlane(plane){
-        const normalizedNormal = plane.normalized();
-        const distanceFromSphereCenter = Math.abs(normalizedNormal._normal.getDotProduct(this._center) - normalizedNormal._distance);
-        const distanceFromSphere = distanceFromSphereCenter - this._radius;
+        // Normalize the plane
+        const normalizedPlane = plane.normalized();
 
-        return new IntersectData(distanceFromSphere < 0, distanceFromSphere);
+        // Calculate the distance from the sphere's center to the plane
+        const distance = normalizedPlane.normal.clone().getDotProduct(this._center) - normalizedPlane.distance;
+
+        // Check if the sphere and the plane are intersecting
+        const doesIntersect = Math.abs(distance) <= this._radius;
+
+
+        return new IntersectData(doesIntersect, distance);
+
     }
 
     intersect(other) {
@@ -81,6 +90,9 @@ export default class BoundingSphere extends PhysicsObject {
         } else if (other instanceof Vector) {
             return this.intersectPoint(other);
         }
+        else {
+            throw new Error(other.constructor + " is not a valid object to intersect with a BoundingSphere")
+        }
     }
 
     draw(ctx){
@@ -89,6 +101,13 @@ export default class BoundingSphere extends PhysicsObject {
         ctx.fillStyle = this._color;
         ctx.fill();
     }
+
+    integrate(deltaTime, settingsRef){
+        // Inherit but also update center
+        super.integrate(deltaTime, settingsRef);
+        this._center = this._position;
+    }
+
 }
 //const one = new BoundingSphere(new Vector({x: 0, y: 1}), 1);
 /*

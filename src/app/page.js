@@ -1,8 +1,7 @@
 "use client"
 import "./globals.css"
 import {
-    LinkIcon,
-    UserIcon
+    LinkIcon, UserIcon
 } from '@heroicons/react/20/solid'
 import {WrenchIcon} from "@heroicons/react/16/solid";
 import Link from "next/link";
@@ -20,39 +19,25 @@ export default function Home() {
     const physicsEngine = useRef(new PhysicsEngine());
 
     const defaultSettings = {
-        gravity: 9800,
-        mass: 1,
-        size: 30,
-        velocity: 1,
-        paused: false,
+        gravity: 9.8, mass: 1, size: 30, velocity: 1, airDensity:1.225,  paused: false,
     }
 
     const [settings, setSettings] = useState({
-        gravity: 9800,
-        mass: 1,
-        size: 30,
-        velocity: 1,
-        paused: false,
+        gravity: 9.8, mass: 1, size: 30, velocity: 1, airDensity:1.225, paused: false,
     })
 
-    const pauseToggle =  (
-        <Switch
+    const pauseToggle = (<Switch
             checked={settings.paused}
             onChange={() => {
                 setSettings({...settings, paused: !settings.paused})
             }}
-            className={`${
-                settings.paused ? 'bg-blue-600' : 'bg-gray-200'
-            } relative inline-flex h-6 w-11 items-center rounded-full`}
+            className={`${settings.paused ? 'bg-blue-600' : 'bg-gray-200'} relative inline-flex h-6 w-11 items-center rounded-full`}
         >
             <span className="sr-only">Enable notifications</span>
             <span
-                className={`${
-                    settings.paused ? 'translate-x-6' : 'translate-x-1'
-                } inline-block h-4 w-4 transform rounded-full bg-white transition`}
+                className={`${settings.paused ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition`}
             />
-        </Switch>
-    )
+        </Switch>)
 
 
     /*
@@ -71,40 +56,37 @@ export default function Home() {
 
      */
     const settingsMenu = (<form>
-            <div className="mt-10 border-b border-gray-900/10 pb-12">
-                <div className="columns-2">
-                    <h2 className="text-base font-semibold leading-7 text-gray-900">Global Settings</h2>
-                    <div className="gap-x-6 gap-y-8">
-                        <div className="sm:col-span-3 flex gap-x-3">
-                            <div className="sm:col-span-3">
-                                <label className="block text-sm font-medium text-gray-900">
-                                    Gravity
-                                </label>
-                                <div className="mt-1">
-                                    <input
-                                        type="number"
-                                        name="gravity"
-                                        min={0}
-                                        max={10000}
-                                        value={settings.gravity}
-                                        id="gravity"
-                                        onChange={(e) => setSettings({...settings, gravity: Number(e.target.value)})}
-                                        className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                                    />
-                                </div>
+        <div className="mt-6 border-b border-gray-900/10 pb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+                <div className="col-span-full">
+                    <h2 className="text-base font-semibold text-gray-900">Global Settings</h2>
+                    <div className="flex gap-x-3">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-900">
+                                Gravity
+                            </label>
+                            <div className="mt-1">
+                                <input
+                                    type="number"
+                                    name="gravity"
+                                    min={0}
+                                    max={1000}
+                                    value={settings.gravity}
+                                    id="gravity"
+                                    onChange={(e) => setSettings({...settings, gravity: Number(e.target.value)})}
+                                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                />
                             </div>
-                            <div className="sm:col-span-1">
-                                <div className="sm:col-span-3">
-                                    <label className="block text-sm font-medium text-gray-900">
-                                        Pause Simulation
-                                    </label>
-                                    <div className="mt-2.5">
-                                        {pauseToggle}
-                                    </div>
-                                </div>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-900">
+                                Pause Simulation
+                            </label>
+                            <div className="mt-2.5">
+                                {pauseToggle}
                             </div>
-                            <div className="sm:col-span-3 mt-5">
-                                <span className="sm:ml-3">
+                        </div>
+                        <span className="mt-5">
                                     <button
                                         type="button"
                                         className="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
@@ -114,80 +96,99 @@ export default function Home() {
                                     >
                                         Reset Settings
                                     </button>
-                                </span>
-                            </div>
-                            <div className="sm:col-span-3 mt-5">
-                                <ToolDropdown setSelectedTool={setSelectedTool}/>
-                            </div>
-                            <div className="sm:col-span-3 mt-3">
-                                <CurrentTool selectedTool={selectedTool}/>
-                            </div>
+                        </span>
+                        <div className="mt-5">
+                            <ToolDropdown setSelectedTool={setSelectedTool}/>
                         </div>
-                    </div>
-
-                    <h2 className="text-base font-semibold leading-7 text-gray-900">Object Settings</h2>
-                    <div className="gap-x-6 gap-y-8">
-                        <div className="sm:col-span-3 flex gap-x-3">
-                            <div className="sm:col-span-3">
-                                <label className="block text-sm font-medium text-gray-900">
-                                    Mass
-                                </label>
-                                <div className="mt-1">
-                                    <input
-                                        type="number"
-                                        name="mass"
-                                        min={0}
-                                        max={10000}
-                                        id="mass"
-                                        value={settings.mass}
-                                        onChange={(e) => setSettings({...settings, mass: Number(e.target.value)})}
-                                        className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                                    />
-                                </div>
-                            </div>
-                            <div className="sm:col-span-full">
-                                <label className="block text-sm font-medium text-gray-900">
-                                    Size
-                                </label>
-                                <div className="mt-1">
-                                    <input
-                                        type="size"
-                                        name="Size"
-                                        min={0}
-                                        max={100}
-                                        value={settings.size}
-                                        id="Size"
-                                        onChange={(e) => setSettings({...settings, size: Number(e.target.value)})}
-                                        className="block w-full px-2 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                                    />
-                                </div>
-                            </div>
-                            <div className="sm:col-span-3">
-                                <label className="block text-sm font-medium text-gray-900">
-                                    Velocity
-                                </label>
-                                <div className="mt-1">
-                                    <input
-                                        type="velocity"
-                                        min={0}
-                                        max={100}
-                                        value={settings.velocity}
-                                        name="velocity"
-                                        id="velocity"
-                                        onChange={(e) => setSettings({...settings, velocity: Number(e.target.value)})}
-                                        className="block w-full rounded-md border-0 py-1.5 px-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                                    />
-                                </div>
-                            </div>
+                        <div className="mt-3">
+                            <CurrentTool selectedTool={selectedTool}/>
                         </div>
 
+                        <span className="mt-5">
+                                    <button
+                                        type="button"
+                                        className="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+                                        onClick={() => {
+                                            setSelectedTool("reset")
+                                        }}
+                                    >
+                                        Reset Env
+                                    </button>
+                        </span>
                     </div>
+                </div>
 
+                <div className="col-span-full">
+                    <h2 className="text-base font-semibold text-gray-900">Object Settings</h2>
+                    <div className="flex gap-x-3">
+                        <div className="mt-1">
+                            <label className="block text-sm font-medium text-gray-900">
+                                Mass
+                            </label>
+                            <input
+                                type="number"
+                                name="mass"
+                                min={0}
+                                max={10000}
+                                id="mass"
+                                value={settings.mass}
+                                onChange={(e) => setSettings({...settings, mass: Number(e.target.value)})}
+                                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                            />
+                        </div>
+                        <div className="mt-1">
+                            <label className="block text-sm font-medium text-gray-900">
+                                Size
+                            </label>
+                            <input
+                                type="number"
+                                name="Size"
+                                min={0}
+                                max={100}
+                                value={settings.size}
+                                id="Size"
+                                onChange={(e) => setSettings({...settings, size: Number(e.target.value)})}
+                                className="block w-full px-2 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                            />
+                        </div>
+                        <div className="mt-1">
+                            <label className="block text-sm font-medium text-gray-900">
+                                Air Density
+                            </label>
+                            <input
+                                type="number"
+                                min={0}
+                                max={100}
+                                value={settings.airDensity}
+                                name="airDensity"
+                                id="airDensity"
+                                onChange={(e) => setSettings({...settings, airDensity: Number(e.target.value)})}
+                                className="block w-full rounded-md border-0 py-1.5 px-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                            />
+                        </div>
+                        <div className="mt-1" hidden>
+                            <label className="block text-sm font-medium text-gray-900">
+                                Velocity
+                            </label>
+                            <input
+                                type="number"
+                                min={0}
+                                max={100}
+                                value={settings.velocity}
+                                name="velocity"
+                                id="velocity"
+                                onChange={(e) => setSettings({...settings, velocity: Number(e.target.value)})}
+                                className="block w-full rounded-md border-0 py-1.5 px-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                            />
+                        </div>
+
+                    </div>
 
 
                 </div>
             </div>
-        </form>)
+        </div>
+    </form>)
 
 
     /*
@@ -207,8 +208,7 @@ export default function Home() {
      */
 
 
-    return (
-        <div className="container">
+    return (<div className="container">
             <div className="lg:flex lg:items-center lg:justify-between">
                 <div className="min-w-0 flex-1">
                     <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">
@@ -228,7 +228,8 @@ export default function Home() {
                 <div className="mt-5 flex lg:ml-4 lg:mt-0">
                     <AboutModal/>
                     <span className="ml-3">
-                        <Link target={"https://github.com/pablotanner"} href="https://github.com/pablotanner" passHref={true}>
+                        <Link target={"https://github.com/pablotanner"} href="https://github.com/pablotanner"
+                              passHref={true}>
                             <button
                                 type="button"
                                 className="inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
@@ -242,10 +243,11 @@ export default function Home() {
             </div>
             {settingsMenu}
             <div className="container py-5 h-full">
-                <Render2D selectedTool={selectedTool} setSelectedTool={setSelectedTool} settings={settings} physicsEngine={physicsEngine}/>
-                <canvas id="physicsCanvas" style={{cursor:"pointer",height:"100%", width:"100%", border:"solid #4F46E5 2px"}}/>
+                <Render2D selectedTool={selectedTool} setSelectedTool={setSelectedTool} settings={settings}
+                          physicsEngine={physicsEngine}/>
+                <canvas id="physicsCanvas"
+                        style={{cursor: "pointer", height: "100%", width: "100%", border: "solid #4F46E5 2px"}}/>
                 {/*<canvas id="physicsCanvas" className="h-full w-full"/>*/}
             </div>
-        </div>
-    )
+        </div>)
 }

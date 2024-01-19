@@ -8,7 +8,6 @@ import PhysicsEngine from "@/physics/physicsEngine";
 
 export default function Render2D({selectedTool, setSelectedTool, settings, physicsEngine}) {
     const settingsRef = useRef(settings)
-
     useEffect(() => {
         settingsRef.current = settings;
     }, [settings]);
@@ -24,26 +23,77 @@ export default function Render2D({selectedTool, setSelectedTool, settings, physi
     if(selectedTool === "reset" && shapes.length > 0) resetCanvas();
 
     function collisionDetection(){
-        if (shapes.length === 1){
-            shapes[0].color = "black";
+        const intersections = []
+        // Check for collisions and handle them
+        for (let i = 0; i < physicsEngine.current.objects.length; i++) {
+            for (let j = i + 1; j < physicsEngine.current.objects.length; j++) {
+                const object1 = physicsEngine.current.objects[i];
+                const object2 = physicsEngine.current.objects[j];
+                if (object1.intersect(object2).doesIntersect) {
+                    intersections.push(i)
+                    intersections.push(j)
+                }
+            }
         }
-        else {
-            shapes.forEach(shape1 => {
-                shapes.forEach(shape2 => {
-                    if (shape1 === shape2) return;
-                    const intersectData = shape1.intersect(shape2);
-                    if (intersectData.doesIntersect){
-                        shape1.color = "red";
-                        shape2.color = "red";
-                    }
-                    else {
-                        shape1.color = "black";
-                        shape2.color = "black";
-                    }
-                })
-            })
+
+        for (let i = 0; i < physicsEngine.current.objects.length; i++){
+            if (intersections.find(index => index === i) === undefined){
+                physicsEngine.current.objects[i].color = "black";
+            }
+            else {
+                physicsEngine.current.objects[i].color = "red";
+            }
+
+        /*
+        for (let i = 0; i < physicsEngine.current.objects.length; i++) {
+            if (intersections[i] === undefined) continue;
+            else if (intersections[i].length === 0) physicsEngine.current.objects[i].color = "black";
+            for (let j = 0; j < intersections[i].length; j++) {
+                const object2 = physicsEngine.current.objects[intersections[i][j]];
+                const intersectData = object1.intersect(object2);
+                const normal = intersectData.normal;
+                const distance = intersectData.distance;
+                const relativeVelocity = object1.velocity.clone().subtract(object2.velocity);
+                const relativeVelocityAlongNormal = relativeVelocity.getDotProduct(normal);
+                if (relativeVelocityAlongNormal > 0) {
+                    continue;
+                }
+                const restitution = 0.7;
+                const impulseMagnitude = -(1 + restitution) * relativeVelocityAlongNormal;
+                const impulse = normal.clone().multiply(impulseMagnitude);
+                object1.velocity = object1.velocity.clone().add(impulse.clone().divide(object1.mass));
+                object2.velocity = object2.velocity.clone().subtract(impulse.clone().divide(object2.mass));
+
+                // Move objects apart
+                const percent = 0.2;
+                const slop = 0.01;
+                const correction = Math.max(distance - slop, 0) / (object1.mass + object2.mass) * percent;
+                const correctionVector = normal.clone().multiply(correction);
+                object1.position = object1.position.clone().add(correctionVector.clone().multiply(object1.mass));
+                object2.position = object2.position.clone().subtract(correctionVector.clone().multiply(object2.mass));
+
+             */
+            }
+
+                    /*
+             shapes.forEach((shape1, index1) => {
+                 let isIntersecting = false;
+                 shapes.forEach((shape2, index2) => {
+                     if (index1 !== index2) {
+                         const intersectData = shape1.intersect(shape2);
+                         if (intersectData.doesIntersect) {
+                             isIntersecting = true;
+                         }
+                     }
+                 });
+                 shape1.color = isIntersecting ? "red" : "black";
+             });
+
+              */
         }
-    }
+
+
+
 
     useEffect(() => {
         const deltaTime = 1/60;
@@ -52,19 +102,22 @@ export default function Render2D({selectedTool, setSelectedTool, settings, physi
         // Simulate physics
         function simulate() {
             const isPaused = settingsRef.current.paused;
-            const constant_gravity = settingsRef.current.gravity;
+            const constant_gravity = settingsRef.current.gravity * 1000;
+            const constant_airDensity = settingsRef.current.airDensity;
 
             if (isPaused) return;
 
             const canvas = document.getElementById('physicsCanvas');
             physicsEngine.current.objects.forEach(object => {
-
-
                 const gravity = new Vector({x: 0, y: constant_gravity, z: 0});
-                object._force = gravity.multiply(object.mass);
+                // F = m*a
+                object._force = gravity.clone().multiply(object.mass);
             });
 
-            physicsEngine.current.integrate(deltaTime);
+            collisionDetection();
+
+            physicsEngine.current.integrate(deltaTime, settingsRef);
+
 
 
             // Check for objects outside canvas bounds
@@ -113,7 +166,7 @@ export default function Render2D({selectedTool, setSelectedTool, settings, physi
 
         function handleClick(event) {
             const x = event.clientX - rect.left;
-            const y = event.clientY - canvas.offsetTop; //rect.top;
+            const y = event.clientY - rect.top; //rect.top;
 
             const constant_size = settingsRef.current.size;
             const constant_mass = settingsRef.current.mass;
@@ -125,7 +178,7 @@ export default function Render2D({selectedTool, setSelectedTool, settings, physi
             }
             else if (selectedTool === "square"){
                 const position = new Vector({x: x-constant_size/2, y: y-constant_size/2, z: 0})
-                shape = new AABB(position, new Vector({x: x+constant_size/2, y: y+constant_size/2, z: 0}), constant_mass);
+                shape = new AABB(position, new Vector({x: x+constant_size/2, y: y+constant_size/2, z: 0}), constant_mass, 1.05)
             }
             else if (selectedTool === "plane"){
                 const d = event.clientY - rect.top;
@@ -134,6 +187,21 @@ export default function Render2D({selectedTool, setSelectedTool, settings, physi
             else {
                 return;
             }
+            physicsEngine.current.objects.every(object => {
+                const intersectData = shape.intersect(object);
+                if (intersectData.doesIntersect){
+                    shape.color = "red";
+                    object.color = "red"
+                    return false;
+                }
+                else {
+                    return true;
+                }
+            })
+
+
+
+        /*
             shapes.every(s => {
                 const intersectData = shape.intersect(s);
                 if (intersectData.doesIntersect){
@@ -145,6 +213,8 @@ export default function Render2D({selectedTool, setSelectedTool, settings, physi
                     return true;
                 }
             })
+
+         */
             physicsEngine.current.addObject(shape)
             setShapes([...shapes, shape]);
         }
@@ -171,7 +241,6 @@ export default function Render2D({selectedTool, setSelectedTool, settings, physi
         canvas.addEventListener('click', handleClick);
         canvas.addEventListener('contextmenu', handleElementSelect);
 
-        collisionDetection();
 
         //shapes.forEach(shape => shape.draw(ctx));
         physicsEngine.current.objects.forEach(object => object.draw(ctx));

@@ -81,6 +81,9 @@ export default class Vector {
     normalize() {
         const l = this.getLength();
 
+        if (l === 0) {
+            return this;
+        }
         return this.divide(l);
     }
 

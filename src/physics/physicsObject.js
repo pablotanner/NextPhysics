@@ -101,6 +101,7 @@ export default class PhysicsObject {
     }
 
 
+
     // based on velocity of PhysicsObject, update position (deltaTime is in seconds)
     integrate(deltaTime){
         // Calculate acceleration from force and mass

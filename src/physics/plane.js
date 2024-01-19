@@ -91,4 +91,8 @@ constructor(normal, distance) {
         ctx.lineTo(1500, yIntercept);
         ctx.stroke();
     }
+
+    integrate(deltaTime){
+        // Do nothing
+    }
 }

@@ -1,7 +1,7 @@
 'use client'
 import BoundingSphere from "./boundingSphere.js";
 import Vector from "./vector.js";
-import { useEffect, useState } from "react";
+import {useEffect, useRef, useState} from "react";
 import AABB from "./aabb.js";
 import Plane from "@/physics/plane";
 import PhysicsEngine from "@/physics/physicsEngine";
@@ -9,14 +9,81 @@ import PhysicsEngine from "@/physics/physicsEngine";
 export default function Render2D({selectedTool, setSelectedTool}) {
     const size = 30;
     const [shapes, setShapes] = useState([]);
-
-    console.log(shapes)
-
+    const physicsEngine = useRef(new PhysicsEngine());
     const resetCanvas = () => {
+        physicsEngine.current = new PhysicsEngine();
         setShapes([]);
         setSelectedTool("select");
     }
+
     if(selectedTool === "reset" && shapes.length > 0) resetCanvas();
+
+    function collisionDetection(){
+        if (shapes.length === 1){
+            shapes[0].color = "black";
+        }
+        else {
+            shapes.forEach(shape1 => {
+                shapes.forEach(shape2 => {
+                    if (shape1 === shape2) return;
+                    const intersectData = shape1.intersect(shape2);
+                    if (intersectData.doesIntersect){
+                        shape1.color = "red";
+                        shape2.color = "red";
+                    }
+                    else {
+                        shape1.color = "black";
+                        shape2.color = "black";
+                    }
+                })
+            })
+        }
+    }
+
+    useEffect(() => {
+        const deltaTime = 1/60;
+        const intervalDelay = 1000 * deltaTime;
+
+        // Add gravity
+        function simulate() {
+            const canvas = document.getElementById('physicsCanvas');
+            const gravity = new Vector({x: 0, y: 9800, z: 0});
+            physicsEngine.current.objects.forEach(object => {
+                object.force = gravity.multiply(object.mass);
+            });
+
+            //physicsEngine.current.integrate(deltaTime);
+
+            physicsEngine.current.objects.forEach(object => {
+                object.integrate(deltaTime)
+            })
+
+            // Check for objects outside canvas bounds
+            physicsEngine.current.objects = physicsEngine.current.objects.filter(object => {
+                const position = object.position.vector;
+                const inBounds = position.x >= 0 && position.x <= canvas.width && position.y >= 0 && position.y <= canvas.height;
+                if (!inBounds) {
+                    // Remove object from shapes state as well
+                    setShapes(shapes => shapes.filter(shape => shape !== object));
+                }
+                return inBounds;
+            });
+
+            //setShapes(shapes => shapes.map(object => object));
+            setShapes(physicsEngine.current.objects.map(object => object))
+
+            //setShapes([...physicsEngine.current.objects]);
+        }
+
+        const intervalId = setInterval(simulate, intervalDelay);
+
+        // Cleanup function
+        return () => {
+            clearInterval(intervalId);
+        };
+    }, []);
+
+
 
     useEffect(() => {
         const canvas = document.getElementById('physicsCanvas');
@@ -64,6 +131,7 @@ export default function Render2D({selectedTool, setSelectedTool}) {
                     return true;
                 }
             })
+            physicsEngine.current.addObject(shape)
             setShapes([...shapes, shape]);
         }
 
@@ -71,46 +139,29 @@ export default function Render2D({selectedTool, setSelectedTool}) {
             const x = event.clientX - rect.left;
             const y = event.clientY - rect.top;
             const position = new Vector({x: x, y: y, z: 0})
-            shapes.find(shape => {
+            let found = false;
+            [...shapes].reverse().find(shape => {
+                if (found) return true;
                 const intersectData = shape.intersectPoint(position)
                 if (intersectData.doesIntersect){
+                    physicsEngine.current.removeObject(shape)
                     setShapes(shapes.filter(s => s !== shape));
-                    /*
-                    shape.velocity = new Vector({x:5, y: 5, z: 0});
-                    shape.integrate(1/60);
-
-                     */
+                    found = true;
+                    return false;
                 }
             });
             event.preventDefault();
         }
 
-        function simulate(event) {
-            return
-            /*
-            const gravity = new Vector({x: 0, y: 9.8, z: 0});
-            const deltaTime = 1/60;
-            const engine = new PhysicsEngine();
-            shapes.forEach(shape => {
-                shape.force = gravity.multiply(shape.mass);
-                engine.addObject(shape);
-            })
-            engine.integrate(deltaTime);
-            setShapes(engine.objects);
-            
-             */
-        }
 
         // Add click event listener
         canvas.addEventListener('click', handleClick);
-        canvas.addEventListener('mousedown', simulate);
         canvas.addEventListener('contextmenu', handleElementSelect);
 
         // Cleanup function
         return () => {
             canvas.removeEventListener('click', handleClick);
             canvas.removeEventListener('contextmenu', handleElementSelect);
-            //canvas.removeEventListener('mousedown', simulate);
         };
 
     }, [shapes,selectedTool]);
@@ -119,6 +170,10 @@ export default function Render2D({selectedTool, setSelectedTool}) {
         const canvas = document.getElementById('physicsCanvas');
         const ctx = canvas.getContext('2d');
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        collisionDetection();
+
         shapes.forEach(shape => shape.draw(ctx));
+        //physicsEngine.current.objects.forEach(object => object.draw(ctx));
     }, [shapes, selectedTool]);
 }

@@ -5,8 +5,8 @@ import BoundingSphere from "@/physics/boundingSphere";
 import Plane from "@/physics/plane";
 
 export default class AABB extends PhysicsObject{
-    constructor(minExtents, maxExtents){
-        super(minExtents, new Vector({x: 0, y: 0}), 1, 1, "black");
+    constructor(minExtents, maxExtents, mass=1, velocity=new Vector({x: 0, y: 0}), restitution=1, color="black"){
+        super(minExtents, velocity, mass, restitution, color);
         this._minExtents = minExtents;
         this._maxExtents = maxExtents;
     }
@@ -130,6 +130,24 @@ export default class AABB extends PhysicsObject{
         ctx.rect(this._minExtents.vector.x, this._minExtents.vector.y, width, height);
         ctx.fillStyle = this._color;
         ctx.fill();
+    }
+
+    // Special integrate method for AABB
+    integrate(deltaTime) {
+        // Calculate acceleration from force and mass
+        const acceleration = this._force.divide(this._mass);
+
+        // Update velocity based on acceleration
+        this._velocity = this._velocity.add(acceleration.multiply(deltaTime));
+
+        // Update position based on velocity
+        const deltaPosition = this._velocity.multiply(deltaTime);
+        this._minExtents = this._minExtents.add(deltaPosition);
+        this._maxExtents = this._maxExtents.add(deltaPosition);
+        this._position = this._minExtents.clone();
+
+        // Reset force for the next frame
+        this._force = new Vector({x: 0, y: 0, z: 0});
     }
 
 }

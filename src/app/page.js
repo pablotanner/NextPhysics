@@ -7,13 +7,205 @@ import {
 import {WrenchIcon} from "@heroicons/react/16/solid";
 import Link from "next/link";
 import Render2D from "../physics/render2D.js";
-import OptionsDropdown from "../components/OptionsDropdown.js";
-import {useState} from "react";
+import ToolDropdown from "../components/ToolDropdown.js";
+import {useRef, useState} from "react";
 import AboutModal from "../components/AboutModal.js";
+import PhysicsEngine from "@/physics/physicsEngine";
+import {Switch} from "@headlessui/react";
+import CurrentTool from "@/components/CurrentTool";
 
 
 export default function Home() {
     const [selectedTool, setSelectedTool] = useState("select");
+    const physicsEngine = useRef(new PhysicsEngine());
+
+    const defaultSettings = {
+        gravity: 9800,
+        mass: 1,
+        size: 30,
+        velocity: 1,
+        paused: false,
+    }
+
+    const [settings, setSettings] = useState({
+        gravity: 9800,
+        mass: 1,
+        size: 30,
+        velocity: 1,
+        paused: false,
+    })
+
+    const pauseToggle =  (
+        <Switch
+            checked={settings.paused}
+            onChange={() => {
+                setSettings({...settings, paused: !settings.paused})
+            }}
+            className={`${
+                settings.paused ? 'bg-blue-600' : 'bg-gray-200'
+            } relative inline-flex h-6 w-11 items-center rounded-full`}
+        >
+            <span className="sr-only">Enable notifications</span>
+            <span
+                className={`${
+                    settings.paused ? 'translate-x-6' : 'translate-x-1'
+                } inline-block h-4 w-4 transform rounded-full bg-white transition`}
+            />
+        </Switch>
+    )
+
+
+    /*
+    let settings = {
+        gravity: 9800,
+        //restitution: 0.8,
+        //friction: 0.5,
+        //airDensity: 1.2,
+        //dragCoefficient: 0.47,
+        //surfaceArea: 1,
+        mass: 1,
+        //radius: 1,
+        size: 30,
+        velocity: 1,
+    }
+
+     */
+    const settingsMenu = (<form>
+            <div className="mt-10 border-b border-gray-900/10 pb-12">
+                <div className="columns-2">
+                    <h2 className="text-base font-semibold leading-7 text-gray-900">Global Settings</h2>
+                    <div className="gap-x-6 gap-y-8">
+                        <div className="sm:col-span-3 flex gap-x-3">
+                            <div className="sm:col-span-3">
+                                <label className="block text-sm font-medium text-gray-900">
+                                    Gravity
+                                </label>
+                                <div className="mt-1">
+                                    <input
+                                        type="number"
+                                        name="gravity"
+                                        min={0}
+                                        max={10000}
+                                        value={settings.gravity}
+                                        id="gravity"
+                                        onChange={(e) => setSettings({...settings, gravity: Number(e.target.value)})}
+                                        className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                    />
+                                </div>
+                            </div>
+                            <div className="sm:col-span-1">
+                                <div className="sm:col-span-3">
+                                    <label className="block text-sm font-medium text-gray-900">
+                                        Pause Simulation
+                                    </label>
+                                    <div className="mt-2.5">
+                                        {pauseToggle}
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="sm:col-span-3 mt-5">
+                                <span className="sm:ml-3">
+                                    <button
+                                        type="button"
+                                        className="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+                                        onClick={() => {
+                                            setSettings(defaultSettings)
+                                        }}
+                                    >
+                                        Reset Settings
+                                    </button>
+                                </span>
+                            </div>
+                            <div className="sm:col-span-3 mt-5">
+                                <ToolDropdown setSelectedTool={setSelectedTool}/>
+                            </div>
+                            <div className="sm:col-span-3 mt-3">
+                                <CurrentTool selectedTool={selectedTool}/>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h2 className="text-base font-semibold leading-7 text-gray-900">Object Settings</h2>
+                    <div className="gap-x-6 gap-y-8">
+                        <div className="sm:col-span-3 flex gap-x-3">
+                            <div className="sm:col-span-3">
+                                <label className="block text-sm font-medium text-gray-900">
+                                    Mass
+                                </label>
+                                <div className="mt-1">
+                                    <input
+                                        type="number"
+                                        name="mass"
+                                        min={0}
+                                        max={10000}
+                                        id="mass"
+                                        value={settings.mass}
+                                        onChange={(e) => setSettings({...settings, mass: Number(e.target.value)})}
+                                        className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                    />
+                                </div>
+                            </div>
+                            <div className="sm:col-span-full">
+                                <label className="block text-sm font-medium text-gray-900">
+                                    Size
+                                </label>
+                                <div className="mt-1">
+                                    <input
+                                        type="size"
+                                        name="Size"
+                                        min={0}
+                                        max={100}
+                                        value={settings.size}
+                                        id="Size"
+                                        onChange={(e) => setSettings({...settings, size: Number(e.target.value)})}
+                                        className="block w-full px-2 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                    />
+                                </div>
+                            </div>
+                            <div className="sm:col-span-3">
+                                <label className="block text-sm font-medium text-gray-900">
+                                    Velocity
+                                </label>
+                                <div className="mt-1">
+                                    <input
+                                        type="velocity"
+                                        min={0}
+                                        max={100}
+                                        value={settings.velocity}
+                                        name="velocity"
+                                        id="velocity"
+                                        onChange={(e) => setSettings({...settings, velocity: Number(e.target.value)})}
+                                        className="block w-full rounded-md border-0 py-1.5 px-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+
+
+                </div>
+            </div>
+        </form>)
+
+
+    /*
+    function settingsChanged(){
+        physicsEngine.current.objects.forEach(object => {
+            object.mass = settings.mass;
+            object.restitution = settings.restitution;
+            object.friction = settings.friction;
+            object.airDensity = settings.airDensity;
+            object.dragCoefficient = settings.dragCoefficient;
+            object.surfaceArea = settings.surfaceArea;
+            object.radius = settings.radius;
+            object.size = settings.size;
+            object.velocity = settings.velocity;
+        })
+    }
+     */
+
 
     return (
         <div className="container">
@@ -34,12 +226,8 @@ export default function Home() {
                     </div>
                 </div>
                 <div className="mt-5 flex lg:ml-4 lg:mt-0">
-                    <OptionsDropdown
-                        selectedTool={selectedTool}
-                        setSelectedTool={setSelectedTool}
-                    />
                     <AboutModal/>
-                    <span className="sm:ml-3">
+                    <span className="ml-3">
                         <Link target={"https://github.com/pablotanner"} href="https://github.com/pablotanner" passHref={true}>
                             <button
                                 type="button"
@@ -52,9 +240,9 @@ export default function Home() {
                     </span>
                 </div>
             </div>
-            {selectedTool}
+            {settingsMenu}
             <div className="container py-5 h-full">
-                <Render2D selectedTool={selectedTool} setSelectedTool={setSelectedTool}/>
+                <Render2D selectedTool={selectedTool} setSelectedTool={setSelectedTool} settings={settings} physicsEngine={physicsEngine}/>
                 <canvas id="physicsCanvas" style={{cursor:"pointer",height:"100%", width:"100%", border:"solid #4F46E5 2px"}}/>
                 {/*<canvas id="physicsCanvas" className="h-full w-full"/>*/}
             </div>

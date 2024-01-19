@@ -6,8 +6,8 @@ import AABB from "@/physics/aabb";
 
 export default class BoundingSphere extends PhysicsObject {
     // Center is vector, radius is float
-    constructor(center, radius) {
-        super(center, new Vector({x: 0, y: 0}), 1, 1, "black");
+    constructor(center, radius, mass=1) {
+        super(center, new Vector({x: 0, y: 0}), mass, 1, "black");
         this._center = center;
         this._radius = radius;
     }

@@ -6,10 +6,15 @@ import AABB from "./aabb.js";
 import Plane from "@/physics/plane";
 import PhysicsEngine from "@/physics/physicsEngine";
 
-export default function Render2D({selectedTool, setSelectedTool}) {
-    const size = 30;
+export default function Render2D({selectedTool, setSelectedTool, settings, physicsEngine}) {
+    const settingsRef = useRef(settings)
+
+    useEffect(() => {
+        settingsRef.current = settings;
+    }, [settings]);
+
     const [shapes, setShapes] = useState([]);
-    const physicsEngine = useRef(new PhysicsEngine());
+
     const resetCanvas = () => {
         physicsEngine.current = new PhysicsEngine();
         setShapes([]);
@@ -44,24 +49,30 @@ export default function Render2D({selectedTool, setSelectedTool}) {
         const deltaTime = 1/60;
         const intervalDelay = 1000 * deltaTime;
 
-        // Add gravity
+        // Simulate physics
         function simulate() {
+            const isPaused = settingsRef.current.paused;
+            const constant_gravity = settingsRef.current.gravity;
+
+            if (isPaused) return;
+
             const canvas = document.getElementById('physicsCanvas');
-            const gravity = new Vector({x: 0, y: 9800, z: 0});
             physicsEngine.current.objects.forEach(object => {
-                object.force = gravity.multiply(object.mass);
+
+
+                const gravity = new Vector({x: 0, y: constant_gravity, z: 0});
+                object._force = gravity.multiply(object.mass);
             });
 
-            //physicsEngine.current.integrate(deltaTime);
+            physicsEngine.current.integrate(deltaTime);
 
-            physicsEngine.current.objects.forEach(object => {
-                object.integrate(deltaTime)
-            })
 
             // Check for objects outside canvas bounds
             physicsEngine.current.objects = physicsEngine.current.objects.filter(object => {
                 const position = object.position.vector;
-                const inBounds = position.x >= 0 && position.x <= canvas.width && position.y >= 0 && position.y <= canvas.height;
+                const height = Number(canvas.style.height.replace("px", "")) + 40;
+                const width = Number(canvas.style.width.replace("px", ""));
+                const inBounds = position.x >= 0 && position.x <= width && position.y >= 0 && position.y <= height;
                 if (!inBounds) {
                     // Remove object from shapes state as well
                     setShapes(shapes => shapes.filter(shape => shape !== object));
@@ -69,10 +80,8 @@ export default function Render2D({selectedTool, setSelectedTool}) {
                 return inBounds;
             });
 
-            //setShapes(shapes => shapes.map(object => object));
             setShapes(physicsEngine.current.objects.map(object => object))
 
-            //setShapes([...physicsEngine.current.objects]);
         }
 
         const intervalId = setInterval(simulate, intervalDelay);
@@ -84,10 +93,10 @@ export default function Render2D({selectedTool, setSelectedTool}) {
     }, []);
 
 
-
     useEffect(() => {
         const canvas = document.getElementById('physicsCanvas');
-        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         const devicePixelRatio = window.devicePixelRatio || 1;
         const rect = canvas.getBoundingClientRect();
@@ -100,19 +109,23 @@ export default function Render2D({selectedTool, setSelectedTool}) {
         canvas.style.width = `${rect.width}px`;
         canvas.style.height = `${rect.height}px`;
 
-        const ctx = canvas.getContext('2d');
         ctx.scale(devicePixelRatio, devicePixelRatio);
 
         function handleClick(event) {
             const x = event.clientX - rect.left;
             const y = event.clientY - canvas.offsetTop; //rect.top;
+
+            const constant_size = settingsRef.current.size;
+            const constant_mass = settingsRef.current.mass;
+            const constant_velocity = settingsRef.current.velocity;
+
             let shape;
             if (selectedTool === "circle"){
-                shape = new BoundingSphere(new Vector({x, y, z: 0}), size);
+                shape = new BoundingSphere(new Vector({x, y, z: 0}), constant_size, constant_mass);
             }
             else if (selectedTool === "square"){
-                const position = new Vector({x: x-size/2, y: y-size/2, z: 0})
-                shape = new AABB(position, new Vector({x: x+size/2, y: y+size/2, z: 0}));
+                const position = new Vector({x: x-constant_size/2, y: y-constant_size/2, z: 0})
+                shape = new AABB(position, new Vector({x: x+constant_size/2, y: y+constant_size/2, z: 0}), constant_mass);
             }
             else if (selectedTool === "plane"){
                 const d = event.clientY - rect.top;
@@ -125,6 +138,7 @@ export default function Render2D({selectedTool, setSelectedTool}) {
                 const intersectData = shape.intersect(s);
                 if (intersectData.doesIntersect){
                     shape.color = "red";
+                    s.color = "red"
                     return false;
                 }
                 else {
@@ -153,10 +167,14 @@ export default function Render2D({selectedTool, setSelectedTool}) {
             event.preventDefault();
         }
 
-
         // Add click event listener
         canvas.addEventListener('click', handleClick);
         canvas.addEventListener('contextmenu', handleElementSelect);
+
+        collisionDetection();
+
+        //shapes.forEach(shape => shape.draw(ctx));
+        physicsEngine.current.objects.forEach(object => object.draw(ctx));
 
         // Cleanup function
         return () => {
@@ -164,16 +182,5 @@ export default function Render2D({selectedTool, setSelectedTool}) {
             canvas.removeEventListener('contextmenu', handleElementSelect);
         };
 
-    }, [shapes,selectedTool]);
-
-    useEffect(() => {
-        const canvas = document.getElementById('physicsCanvas');
-        const ctx = canvas.getContext('2d');
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        collisionDetection();
-
-        shapes.forEach(shape => shape.draw(ctx));
-        //physicsEngine.current.objects.forEach(object => object.draw(ctx));
     }, [shapes, selectedTool]);
 }

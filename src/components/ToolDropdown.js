@@ -5,14 +5,14 @@ import {ChevronDownIcon, CursorArrowRaysIcon, MinusIcon, TrashIcon} from '@heroi
 import {StopIcon} from "@heroicons/react/16/solid";
 
 
-export default function OptionsDropdown({selectedTool, setSelectedTool}) {
+export default function ToolDropdown({selectedTool, setSelectedTool}) {
 
     return (
         <div className="">
             <Menu as="div" className="relative inline-block text-left">
                 <div>
                     <Menu.Button className="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
-                        Options
+                        Select Tool
                         <ChevronDownIcon
                             className="-mr-1 ml-2 h-5 w-5 text-violet-200 hover:text-violet-100"
                             aria-hidden="true"
@@ -33,7 +33,10 @@ export default function OptionsDropdown({selectedTool, setSelectedTool}) {
                             <Menu.Item>
                                 {({active}) => (
                                     <button className={`${active ? 'bg-violet-500 text-white' : 'text-gray-900'} group flex rounded-md items-center w-full px-2 py-2 text-sm`}
-                                            onClick={() => setSelectedTool("select")}
+                                            onClick={(event) => {
+                                                event.preventDefault();
+                                                setSelectedTool("select");
+                                            }}
                                     >
                                         <CursorArrowRaysIcon
                                             className="mr-2 h-5 w-5"
@@ -46,7 +49,10 @@ export default function OptionsDropdown({selectedTool, setSelectedTool}) {
                             <Menu.Item>
                                 {({active}) => (
                                     <button className={`${active ? 'bg-violet-500 text-white' : 'text-gray-900'} group flex rounded-md items-center w-full px-2 py-2 text-sm`}
-                                            onClick={() => setSelectedTool("circle")}
+                                            onClick={(event) => {
+                                                event.preventDefault();
+                                                setSelectedTool("circle")
+                                            }}
                                     >
                                         <CircleIcon
                                             className="mr-2 h-5 w-5"
@@ -60,7 +66,10 @@ export default function OptionsDropdown({selectedTool, setSelectedTool}) {
                             <Menu.Item>
                                 {({active}) => (
                                     <button className={`${active ? 'bg-violet-500 text-white' : 'text-gray-900'} group flex rounded-md items-center w-full px-2 py-2 text-sm`}
-                                            onClick={() => setSelectedTool("square")}
+                                            onClick={(event) => {
+                                                event.preventDefault();
+                                                setSelectedTool("square");
+                                            }}
                                     >
                                         <StopIcon
                                             className="mr-2 h-5 w-5"
@@ -74,7 +83,10 @@ export default function OptionsDropdown({selectedTool, setSelectedTool}) {
                             <Menu.Item>
                                 {({active}) => (
                                     <button className={`${active ? 'bg-violet-500 text-white' : 'text-gray-900'} group flex rounded-md items-center w-full px-2 py-2 text-sm`}
-                                            onClick={() => setSelectedTool("plane")}
+                                            onClick={(event) => {
+                                                event.preventDefault();
+                                                setSelectedTool("plane")
+                                            }}
                                     >
                                         <MinusIcon
                                             className="mr-2 h-5 w-5"
@@ -90,7 +102,10 @@ export default function OptionsDropdown({selectedTool, setSelectedTool}) {
                             <Menu.Item>
                                 {({active}) => (
                                     <button className={`${active ? 'bg-violet-500 text-white' : 'text-gray-900'} group flex rounded-md items-center w-full px-2 py-2 text-sm`}
-                                            onClick={() => setSelectedTool("reset")}
+                                            onClick={(event) => {
+                                                event.preventDefault();
+                                                setSelectedTool("reset");
+                                            }}
                                     >
                                         <TrashIcon
                                             className="mr-2 h-5 w-5"

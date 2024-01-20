@@ -1,13 +1,16 @@
 'use client'
 import BoundingSphere from "./boundingSphere.js";
 import Vector from "./vector.js";
-import {useEffect, useRef, useState} from "react";
+import {useEffect, useState} from "react";
 import AABB from "./aabb.js";
 import Plane from "@/physics/plane";
-import PhysicsEngine from "@/physics/physicsEngine";
 
 export default function Render2D({selectedTool, physicsEngine}) {
     const [shapes, setShapes] = useState([]);
+
+    const [selectedObject, setSelectedObject] = useState(null);
+    const [previousMousePosition, setPreviousMousePosition] = useState(null);
+
 
 
     useEffect(() => {
@@ -83,6 +86,54 @@ export default function Render2D({selectedTool, physicsEngine}) {
 
         ctx.scale(devicePixelRatio, devicePixelRatio);
 
+
+        function handleMouseDown(event){
+            if (selectedTool !== "select") return;
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+            const position = new Vector({x: x, y: y})
+            let found = false;
+            [...shapes].reverse().find(shape => {
+                if (found) return true;
+                const intersectData = shape.intersectPoint(position)
+                if (intersectData.doesIntersect){
+                    setSelectedObject(shape);
+                    setPreviousMousePosition(position);
+                    found = true;
+                    return false;
+                }
+            });
+            event.preventDefault();
+        }
+
+        function handleMouseMove(event){
+            if (selectedObject && selectedTool === "select"){
+                const x = event.clientX - rect.left;
+                const y = event.clientY - rect.top;
+                const position = new Vector({x: x, y: y});
+                selectedObject.position = position;
+                setPreviousMousePosition(position);
+                //selectedObject.freeze();
+            }
+        }
+
+        function handleMouseUp(event){
+            // Apply velocity to object
+            if (selectedObject && selectedTool === "select"){
+                const x = event.clientX - rect.left;
+                const y = event.clientY - rect.top;
+                const finalMousePosition = new Vector({x: x, y: y});
+                selectedObject.velocity = finalMousePosition.clone().subtract(previousMousePosition).multiply(30);
+                selectedObject.angularVelocity = 0;
+                selectedObject.torque = 0;
+            }
+            setSelectedObject(null);
+            setPreviousMousePosition(null);
+        }
+
+
+
+
         function handleClick(event) {
             const x = event.clientX - rect.left;
             const y = event.clientY - rect.top; //rect.top;
@@ -134,6 +185,7 @@ export default function Render2D({selectedTool, physicsEngine}) {
                 return;
             }
 
+            /* Will detect if paused as well
             physicsEngine.current.objects.every(obj => {
                 const intersectData = object.intersect(obj);
                 if (intersectData.doesIntersect){
@@ -145,6 +197,7 @@ export default function Render2D({selectedTool, physicsEngine}) {
                     return true;
                 }
             })
+             */
 
             physicsEngine.current.addObject(object)
             setShapes(shapes => [...shapes, object]);
@@ -172,13 +225,22 @@ export default function Render2D({selectedTool, physicsEngine}) {
         canvas.addEventListener('click', handleClick);
         canvas.addEventListener('contextmenu', handleElementSelect);
 
+        canvas.addEventListener('mousedown', handleMouseDown);
+        canvas.addEventListener('mousemove', handleMouseMove);
+        canvas.addEventListener('mouseup', handleMouseUp);
+
         //shapes.forEach(shape => shape.draw(ctx));
         physicsEngine.current.objects.forEach(object => object.draw(ctx));
+
+
 
         // Cleanup function
         return () => {
             canvas.removeEventListener('click', handleClick);
             canvas.removeEventListener('contextmenu', handleElementSelect);
+            canvas.removeEventListener('mousedown', handleMouseDown);
+            canvas.removeEventListener('mousemove', handleMouseMove);
+            canvas.removeEventListener('mouseup', handleMouseUp);
         };
 
     }, [shapes, selectedTool]);

@@ -20,6 +20,11 @@ export default class PhysicsObject {
         return this._angularVelocity;
     }
 
+    freeze(){
+        this.velocity = new Vector({x: 0, y: 0});
+        this.force = new Vector({x: 0, y: 0});
+    }
+
     set angularVelocity(angularVelocity){
         if(typeof angularVelocity !== "number"){
             throw new Error("angularVelocity must be a number");

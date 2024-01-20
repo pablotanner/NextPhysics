@@ -113,7 +113,8 @@ export default function Render2D({selectedTool, physicsEngine}) {
                     velocity: new Vector({x: 0, y: 0}),
                     restitution: 0.5,
                     color: "black",
-                    friction: 0.5
+                    friction: 0.5,
+                    rotation: 0
                 });
             }
             else if (selectedTool === "plane"){

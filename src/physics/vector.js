@@ -74,6 +74,22 @@ export default class Vector {
         return dotProduct;
     }
 
+    getCrossProduct(vector) {
+        // 3x3 cross product
+        if (this.getComponents().length !== 3 || vector.getComponents().length !== 3) {
+            const x = this.vector.y * vector.vector.z - this.vector.z * vector.vector.y;
+            const y = this.vector.z * vector.vector.x - this.vector.x * vector.vector.z;
+            const z = this.vector.x * vector.vector.y - this.vector.y * vector.vector.x;
+            return new Vector({x, y, z});
+        }
+
+        // 2x2 cross product (returns scalar!)
+        return this.vector.x * vector.vector.y - this.vector.y * vector.vector.x;
+
+
+
+    }
+
     getCosineSimilarity(vector) {
         return this.getDotProduct(vector) / (this.getLength() * vector.getLength());
     }

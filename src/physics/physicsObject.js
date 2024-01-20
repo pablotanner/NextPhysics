@@ -2,7 +2,7 @@ import Vector from "./vector.js";
 import ObjectTypes from "@/physics/ObjectTypes";
 
 export default class PhysicsObject {
-    constructor({ position, velocity=new Vector({x:0, y:0}), mass, restitution, surfaceArea, color="black", drag=0, friction=0 }) {
+    constructor({ position, velocity=new Vector({x:0, y:0}), mass, restitution, surfaceArea, color="black", drag=0, friction=0, angularVelocity=0, torque=0}) {
         this._motion = { position, velocity };
         this._mass = mass;
         this._restitution = restitution;
@@ -12,6 +12,38 @@ export default class PhysicsObject {
         this._drag = drag;
         this._surfaceArea = surfaceArea;
         this._objectType = "PhysicsObject";
+        this._angularVelocity = angularVelocity;
+        this._torque = torque;
+    }
+
+    get angularVelocity(){
+        return this._angularVelocity;
+    }
+
+    set angularVelocity(angularVelocity){
+        if(typeof angularVelocity !== "number"){
+            throw new Error("angularVelocity must be a number");
+        }
+        this._angularVelocity = angularVelocity;
+    }
+
+    get torque(){
+        return this._torque;
+    }
+
+    set torque(torque){
+        if(typeof torque !== "number"){
+            throw new Error("torque must be a number");
+        }
+        this._torque = torque;
+    }
+
+    applyForceAtPosition(force, position){
+        this.applyForce(force);
+
+        const r = position.clone().subtract(this.position);
+        const torque = r.getCrossProduct(force);
+        this.torque += torque;
     }
 
     get friction(){

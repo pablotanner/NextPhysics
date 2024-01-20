@@ -6,13 +6,26 @@ import Plane from "@/physics/plane";
 import objectTypes from "@/physics/ObjectTypes";
 
 export default class AABB extends PhysicsObject {
-    constructor({ minExtents, maxExtents, mass = 1, drag = 1.05, velocity = new Vector({x: 0, y: 0}), restitution = 1, color}) {
+    constructor({ minExtents, maxExtents, mass = 1, drag = 1.05, velocity = new Vector({x: 0, y: 0}), restitution = 1, color, rotation = 0}) {
         super({ position: minExtents, velocity, mass, restitution, color });
         this._minExtents = minExtents;
         this._maxExtents = maxExtents;
         this._drag = drag;
         this._surfaceArea = this.calculateSurfaceArea();
         this._objectType = objectTypes.AABB;
+        this._rotation = rotation;
+    }
+
+    get rotation(){
+        return this._rotation;
+    }
+
+    set rotation(rotation){
+        this._rotation = rotation;
+    }
+
+    applyRotation(rotation){
+        this.rotation += rotation;
     }
 
 
@@ -101,10 +114,22 @@ export default class AABB extends PhysicsObject {
     draw(ctx) {
         const width = this.maxExtents.vector.x - this.minExtents.vector.x;
         const height = this.maxExtents.vector.y - this.minExtents.vector.y;
+        const centerX = this.minExtents.vector.x + width / 2;
+        const centerY = this.minExtents.vector.y + height / 2;
+
+        ctx.save();
+
+        // Translate to center
+        ctx.translate(centerX, centerY);
+        ctx.rotate(this.rotation);
+
+        //Draw AABB
         ctx.beginPath();
-        ctx.rect(this.minExtents.vector.x, this._minExtents.vector.y, width, height);
+        ctx.rect(-width/2, -height/2, width, height);
         ctx.fillStyle = this.color;
         ctx.fill();
+
+        ctx.restore();
     }
 
     resolveCollisionPlane(plane, intersectData) {
@@ -118,32 +143,7 @@ export default class AABB extends PhysicsObject {
     }
 
     resolveCollisionAABB(aabb, intersectData) {
-        // Calculate the centers of the AABBs
-        const center1 = aabb.minExtents.clone().add(aabb.maxExtents.clone()).divide(2);
-        const center2 = this.minExtents.clone().add(this.maxExtents.clone()).divide(2);
-
-        // Calculate the collision normal
-        const collisionNormal = center2.clone().subtract(center1).normalize();
-
-        // Calculate the half extents of the AABBs
-        const halfExtents1 = aabb.maxExtents.clone().subtract(aabb.minExtents).divide(2);
-        const halfExtents2 = this.maxExtents.clone().subtract(this.minExtents).divide(2);
-
-        // Calculate the overlap along the collision normal
-        const overlap = halfExtents1.add(halfExtents2).subtract(center2.subtract(center1).abs());
-
-        // Calculate the penetration depth
-        const penetrationDepth = overlap.max();
-
-        // Calculate the total inverse mass
-        const totalInverseMass = aabb.inverseMass + this.inverseMass;
-
-        // Calculate the movement vector
-        const movement = collisionNormal.clone().multiply(penetrationDepth / totalInverseMass);
-
-        // Move the AABB out of the collision
-        aabb.minExtents = aabb.minExtents.clone().subtract(movement.clone().multiply(aabb.inverseMass));
-        aabb.maxExtents = aabb.maxExtents.clone().subtract(movement.clone().multiply(aabb.inverseMass));
+        // Broken
     }
 
     resolveCollisionSphere(sphere, intersectData) {
@@ -157,6 +157,8 @@ export default class AABB extends PhysicsObject {
         this.minExtents = this.minExtents.clone().add(deltaPosition);
         this.maxExtents = this.maxExtents.clone().add(deltaPosition);
         this.position = this.minExtents.clone();
+
+        this.rotation += this.angularVelocity * deltaTime;
     }
 }
 

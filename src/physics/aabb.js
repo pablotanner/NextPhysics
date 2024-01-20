@@ -3,17 +3,22 @@ import Vector from "./vector.js";
 import IntersectData from "./intersectData.js";
 import BoundingSphere from "@/physics/boundingSphere";
 import Plane from "@/physics/plane";
+import objectTypes from "@/physics/ObjectTypes";
 
 export default class AABB extends PhysicsObject {
-    constructor(minExtents, maxExtents, mass = 1, drag = 1.05, velocity = new Vector({x: 0, y: 0}), restitution = 1, color = "black") {
-        super(minExtents, velocity, mass, restitution, color);
+    constructor({ minExtents, maxExtents, mass = 1, drag = 1.05, velocity = new Vector({x: 0, y: 0}), restitution = 1, color}) {
+        super({ position: minExtents, velocity, mass, restitution, color });
         this._minExtents = minExtents;
         this._maxExtents = maxExtents;
         this._drag = drag;
-        // Calculate surface area
-        const width = this._maxExtents.vector.x - this._minExtents.vector.x;
-        const height = this._maxExtents.vector.y - this._minExtents.vector.y;
-        this._surfaceArea = 2 * width * height + 2 * width * height + 2 * width * height;
+        this._surfaceArea = this.calculateSurfaceArea();
+        this._objectType = objectTypes.AABB;
+    }
+
+    calculateSurfaceArea() {
+        const width = this.maxExtents.vector.x - this.minExtents.vector.x;
+        const height = this.maxExtents.vector.y - this.minExtents.vector.y;
+        return 2 * width * height + 2 * width * height + 2 * width * height;
     }
 
     get minExtents() {
@@ -40,41 +45,44 @@ export default class AABB extends PhysicsObject {
 
 
     intersectSphere(sphere) {
+        return sphere.intersectAABB(this);
+        /*
         const sphereCenter = sphere.position.vector;
 
         // Check if the sphere's center is inside the AABB
-        if (this._minExtents.vector.x <= sphereCenter.x && sphereCenter.x <= this._maxExtents.vector.x &&
-            this._minExtents.vector.y <= sphereCenter.y && sphereCenter.y <= this._maxExtents.vector.y &&
-            this._minExtents.vector.z <= sphereCenter.z && sphereCenter.z <= this._maxExtents.vector.z) {
+        if (this.minExtents.vector.x <= sphereCenter.x && sphereCenter.x <= this.maxExtents.vector.x &&
+            this.minExtents.vector.y <= sphereCenter.y && sphereCenter.y <= this.maxExtents.vector.y &&
+            this.minExtents.vector.z <= sphereCenter.z && sphereCenter.z <= this.maxExtents.vector.z) {
             // If the sphere's center is inside the AABB, the sphere and the AABB are intersecting
             return new IntersectData(true, 0);
         }
 
         // If the sphere's center is outside the AABB, calculate the closest point on the AABB to the sphere
-        const x = Math.max(this._minExtents.vector.x, Math.min(sphereCenter.x, this._maxExtents.vector.x));
-        const y = Math.max(this._minExtents.vector.y, Math.min(sphereCenter.y, this._maxExtents.vector.y));
-        const z = Math.max(this._minExtents.vector.z, Math.min(sphereCenter.z, this._maxExtents.vector.z));
+        const x = Math.max(this.minExtents.vector.x, Math.min(sphereCenter.x, this.maxExtents.vector.x));
+        const y = Math.max(this.minExtents.vector.y, Math.min(sphereCenter.y, this.maxExtents.vector.y));
 
         const distance = Math.sqrt((x - sphereCenter.x) * (x - sphereCenter.x) +
-            (y - sphereCenter.y) * (y - sphereCenter.y) +
-            (z - sphereCenter.z) * (z - sphereCenter.z));
+            (y - sphereCenter.y) * (y - sphereCenter.y));
 
         return new IntersectData(distance < sphere.radius, distance - sphere.radius);
+
+         */
     }
 
     intersectPoint(pointVector) {
         const point = pointVector.vector;
 
         const box = {
-            minX: this._minExtents.vector.x,
-            maxX: this._maxExtents.vector.x,
-            minY: this._minExtents.vector.y,
-            maxY: this._maxExtents.vector.y,
-            minZ: this._minExtents.vector.z,
-            maxZ: this._maxExtents.vector.z
+            minX: this.minExtents.vector.x,
+            maxX: this.maxExtents.vector.x,
+            minY: this.minExtents.vector.y,
+            maxY: this.maxExtents.vector.y,
+            minZ: this.minExtents.vector.z,
+            maxZ: this.maxExtents.vector.z
         };
 
-        return new IntersectData((point.x >= box.minX && point.x <= box.maxX) && (point.y >= box.minY && point.y <= box.maxY) && (point.z >= box.minZ && point.z <= box.maxZ), 0);
+        //return new IntersectData((point.x >= box.minX && point.x <= box.maxX) && (point.y >= box.minY && point.y <= box.maxY) && (point.z >= box.minZ && point.z <= box.maxZ), 0);
+        return new IntersectData((point.x >= box.minX && point.x <= box.maxX) && (point.y >= box.minY && point.y <= box.maxY), 0);
     }
 
     intersectAABB(otherAABB) {
@@ -89,8 +97,8 @@ export default class AABB extends PhysicsObject {
         return new IntersectData(maxDistance < 0, maxDistance);
          */
 
-        const min1 = this._minExtents.vector;
-        const max1 = this._maxExtents.vector;
+        const min1 = this.minExtents.vector;
+        const max1 = this.maxExtents.vector;
         const min2 = otherAABB.minExtents.vector;
         const max2 = otherAABB.maxExtents.vector;
 
@@ -105,37 +113,22 @@ export default class AABB extends PhysicsObject {
     }
 
     intersectPlane(plane) {
-        const center = this._minExtents.clone().add(this._maxExtents).divide(2);
-        const extents = this._maxExtents.clone().subtract(center);
+        const center = this.minExtents.clone().add(this.maxExtents).divide(2);
+        const extents = this.maxExtents.clone().subtract(center);
 
-        const r = extents.vector.x * Math.abs(plane.normal.vector.x) + extents.vector.y * Math.abs(plane.normal.vector.y) + extents.vector.z * Math.abs(plane.normal.vector.z);
+        const r = extents.vector.x * Math.abs(plane.normal.vector.x) + extents.vector.y * Math.abs(plane.normal.vector.y);// + extents.vector.z * Math.abs(plane.normal.vector.z);
         const s = plane.normal.getDotProduct(center) - plane.distance;
 
         return new IntersectData(Math.abs(s) <= r, s - r);
     }
 
-    intersect(other) {
-        if (other instanceof BoundingSphere) {
-            return this.intersectSphere(other);
-        } else if (other instanceof AABB) {
-            return this.intersectAABB(other);
-        } else if (other instanceof Plane) {
-            return this.intersectPlane(other);
-        } else if (other instanceof Vector) {
-            return this.intersectPoint(other);
-        }
-        else {
-            throw new Error(other.constructor + " is not a valid type to intersect with an AABB");
-        }
-    }
-
 
     draw(ctx) {
-        const width = this._maxExtents.vector.x - this._minExtents.vector.x;
-        const height = this._maxExtents.vector.y - this._minExtents.vector.y;
+        const width = this.maxExtents.vector.x - this.minExtents.vector.x;
+        const height = this.maxExtents.vector.y - this.minExtents.vector.y;
         ctx.beginPath();
-        ctx.rect(this._minExtents.vector.x, this._minExtents.vector.y, width, height);
-        ctx.fillStyle = this._color;
+        ctx.rect(this.minExtents.vector.x, this._minExtents.vector.y, width, height);
+        ctx.fillStyle = this.color;
         ctx.fill();
     }
 
@@ -173,10 +166,10 @@ export default class AABB extends PhysicsObject {
         this._force = new Vector({x: 0, y: 0, z: 0});
          */
         super.integrate(deltaTime, settingsRef);
-        const deltaPosition = this._velocity.clone().multiply(deltaTime);
-        this._minExtents = this._minExtents.clone().add(deltaPosition);
-        this._maxExtents = this._maxExtents.clone().add(deltaPosition);
-        this._position = this._minExtents.clone();
+        const deltaPosition = this.velocity.clone().multiply(deltaTime);
+        this.minExtents = this.minExtents.clone().add(deltaPosition);
+        this.maxExtents = this.maxExtents.clone().add(deltaPosition);
+        this.position = this.minExtents.clone();
     }
 }
 

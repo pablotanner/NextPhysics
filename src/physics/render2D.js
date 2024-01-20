@@ -20,9 +20,9 @@ export default function Render2D({selectedTool, setSelectedTool, settings, physi
         setSelectedTool("select");
     }
 
-    if(selectedTool === "reset" && shapes.length > 0) resetCanvas();
+    if(selectedTool === "reset" && (shapes.length > 0 || physicsEngine.current.objects.length > 0)) resetCanvas();
 
-    /*
+
     function collisionDetection() {
         const intersections = []
         // Check for collisions and handle them
@@ -31,6 +31,7 @@ export default function Render2D({selectedTool, setSelectedTool, settings, physi
                 const object1 = physicsEngine.current.objects[i];
                 const object2 = physicsEngine.current.objects[j];
                 if (object1.intersect(object2).doesIntersect) {
+                    console.log(object1.intersect(object2))
                     intersections.push(i)
                     intersections.push(j)
                 }
@@ -45,7 +46,8 @@ export default function Render2D({selectedTool, setSelectedTool, settings, physi
             }
         }
     }
-     */
+
+    /*
     function collisionDetection() {
         const intersections = []
         // Check for collisions and handle them
@@ -94,6 +96,8 @@ export default function Render2D({selectedTool, setSelectedTool, settings, physi
         }
     }
 
+     */
+
 
 
     useEffect(() => {
@@ -112,11 +116,11 @@ export default function Render2D({selectedTool, setSelectedTool, settings, physi
             physicsEngine.current.objects.forEach(object => {
                 const gravity = new Vector({x: 0, y: constant_gravity, z: 0});
                 // F = m*a
-                object._force = gravity.clone().multiply(object.mass);
+                object.force = gravity.clone().multiply(object.mass);
             });
 
-
             collisionDetection();
+
 
 
 
@@ -179,25 +183,49 @@ export default function Render2D({selectedTool, setSelectedTool, settings, physi
             const constant_mass = settingsRef.current.mass;
             const constant_velocity = settingsRef.current.velocity;
 
-            let shape;
+            let object;
             if (selectedTool === "circle"){
-                shape = new BoundingSphere(new Vector({x, y, z: 0}), constant_size, constant_mass);
+                object = new BoundingSphere({
+                    center: new Vector({x: x, y: y}),
+                    radius: constant_size,
+                    mass: constant_mass,
+                    drag: 0.47,
+                    velocity: new Vector({x: 0, y: 0}),
+                    restitution: 0.8,
+                    color: "black"
+                });
             }
             else if (selectedTool === "square"){
-                const position = new Vector({x: x-constant_size/2, y: y-constant_size/2, z: 0})
-                shape = new AABB(position, new Vector({x: x+constant_size/2, y: y+constant_size/2, z: 0}), constant_mass, 1.05)
+                object = new AABB({
+                    minExtents: new Vector({x: x-constant_size/2, y: y-constant_size/2, z: 0}),
+                    maxExtents: new Vector({x: x+constant_size/2, y: y+constant_size/2, z: 0}),
+                    mass: constant_mass,
+                    drag: 1.05,
+                    velocity: new Vector({x: 0, y: 0}),
+                    restitution: 1,
+                    color: "black"
+                });
             }
             else if (selectedTool === "plane"){
-                const d = event.clientY - rect.top;
-                shape = new Plane(new Vector({x: 0, y: 1, z: 0}), d)
+                const dist = event.clientY - rect.top;
+                object = new Plane({
+                    normal: new Vector({x: 0, y: 1}),
+                    distance: dist,
+                    mass: 1,
+                    drag: 0,
+                    velocity: new Vector({x: 0, y: 0}),
+                    restitution: 1,
+                    color: "black"
+                });
             }
             else {
                 return;
             }
-            physicsEngine.current.objects.every(object => {
-                const intersectData = shape.intersect(object);
+
+            physicsEngine.current.objects.every(obj => {
+                const intersectData = object.intersect(obj);
                 if (intersectData.doesIntersect){
-                    shape.color = "red";
+                    obj.color = "red";
                     object.color = "red"
                     return false;
                 }
@@ -222,18 +250,19 @@ export default function Render2D({selectedTool, setSelectedTool, settings, physi
             })
 
          */
-            physicsEngine.current.addObject(shape)
-            setShapes([...shapes, shape]);
+            physicsEngine.current.addObject(object)
+            setShapes([...shapes, object]);
         }
 
         function handleElementSelect(event){
             const x = event.clientX - rect.left;
             const y = event.clientY - rect.top;
-            const position = new Vector({x: x, y: y, z: 0})
+            const position = new Vector({x: x, y: y})
             let found = false;
             [...shapes].reverse().find(shape => {
                 if (found) return true;
                 const intersectData = shape.intersectPoint(position)
+                console.log(shape,position,intersectData)
                 if (intersectData.doesIntersect){
                     physicsEngine.current.removeObject(shape)
                     setShapes(shapes.filter(s => s !== shape));

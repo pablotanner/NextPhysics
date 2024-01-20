@@ -172,32 +172,11 @@ export default class BoundingSphere extends PhysicsObject {
         // Move the sphere out of the plane
         this.position = this.position.clone().add(direction.clone().multiply(distance));
 
-
         // Reflect the sphere's velocity about the plane's normal
         const reflectedVelocity = this.velocity.clone().reflect(direction);
 
         // Scale the reflected velocity by the sphere's restitution
         this.velocity = reflectedVelocity.clone().multiply(this.restitution);
-
-        // Friction
-        const frictionCoefficient = this.friction;
-        const relativeVelocity = this.velocity.clone();
-        const normal = direction;
-        const tangent = relativeVelocity.clone().subtract(normal.clone().multiply(relativeVelocity.getDotProduct(normal))).normalize();
-        const jt = -relativeVelocity.getDotProduct(tangent);
-        const jtDivide = jt / (1 / this.mass);
-
-        let frictionImpulse;
-        if (Math.abs(jtDivide) < jt * frictionCoefficient) {
-            frictionImpulse = tangent.clone().multiply(jtDivide);
-        } else {
-            frictionImpulse = tangent.clone().multiply(-jt).multiply(frictionCoefficient);
-        }
-
-
-        this.velocity = this.velocity.clone().subtract(frictionImpulse.clone().divide(this.mass));
-
-
     }
 
     draw(ctx){

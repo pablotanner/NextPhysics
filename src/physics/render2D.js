@@ -17,7 +17,6 @@ export default function Render2D({selectedTool, physicsEngine}) {
         // Simulate physics
         function simulate() {
             const isPaused = physicsEngine.current.settings.paused;
-            const constant_gravity = physicsEngine.current.settings.gravity * 100;
 
             if (isPaused) {
                 // Just update shape state
@@ -26,11 +25,14 @@ export default function Render2D({selectedTool, physicsEngine}) {
             }
 
             const canvas = document.getElementById('physicsCanvas');
+            /*
             physicsEngine.current.objects.forEach(object => {
                 const gravity = new Vector({x: 0, y: constant_gravity});
                 // F = m*a
                 object.force = gravity.clone().multiply(object.mass);
             });
+
+             */
 
             // Run simulation, update positions, collisions, etc.
             physicsEngine.current.update(deltaTime);
@@ -119,7 +121,7 @@ export default function Render2D({selectedTool, physicsEngine}) {
                 object = new Plane({
                     normal: new Vector({x: 0, y: 1}),
                     distance: dist,
-                    mass: Infinity,
+                    mass: 99999999,
                     drag: 0,
                     velocity: new Vector({x: 0, y: 0}),
                     restitution: 1,

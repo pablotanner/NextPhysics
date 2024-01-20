@@ -1,4 +1,5 @@
 import ObjectTypes from "@/physics/ObjectTypes";
+import Vector from "@/physics/vector";
 
 
 export default class PhysicsEngine {
@@ -73,11 +74,18 @@ export default class PhysicsEngine {
 
     applyFriction() {
         this.objects.forEach((object) => {
-            const frictionForce = object.velocity.clone().normalize().multiply(-object.friction * object.mass * this.settings.gravity);
+            const frictionForce = object.velocity.clone().normalize().multiply(-object.friction * object.mass * (this.settings.gravity * 100));
             object.applyForce(frictionForce);
+
         });
     }
 
+    applyGravity() {
+        this.objects.forEach((object) => {
+            const gravityForce = new Vector({x: 0, y: object.mass * (this.settings.gravity * 100)});
+            object.applyForce(gravityForce);
+        });
+    }
 
 
     integrate(deltaTime) {
@@ -87,10 +95,11 @@ export default class PhysicsEngine {
     }
 
     update(deltaTime) {
-        this.applyDrag();
-        //this.applyFriction();
-        this.integrate(deltaTime);
-        this.handleCollisions();
+        this.applyDrag(); // Objects slow down in air (if larger surface area, more slow)
+        this.applyFriction(); // Sliding objects slow down
+        this.applyGravity(); // All objects fall
+        this.integrate(deltaTime); // Move objects
+        this.handleCollisions(); // Handle collisions
     }
 
 }

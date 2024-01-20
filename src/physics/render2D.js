@@ -47,56 +47,6 @@ export default function Render2D({selectedTool, setSelectedTool, settings, physi
         }
     }
 
-    /*
-    function collisionDetection() {
-        const intersections = []
-        // Check for collisions and handle them
-        for (let i = 0; i < physicsEngine.current.objects.length; i++) {
-            const object1 = physicsEngine.current.objects[i];
-            for (let j = i + 1; j < physicsEngine.current.objects.length; j++) {
-                const object2 = physicsEngine.current.objects[j];
-                const intersectData = object1.intersect(object2);
-                if (intersectData.doesIntersect) {
-                    intersections.push(i)
-                    intersections.push(j)
-
-                    // Calculate collision response
-                    const collisionDirection = object2.position.subtract(object1.position).normalize();
-                    const relativeVelocity = object1.velocity.subtract(object2.velocity);
-                    const velocityAlongNormal = relativeVelocity.getDotProduct(collisionDirection);
-
-                    if (velocityAlongNormal > 0) {
-                        // The objects are moving apart, no need to handle the collision
-                        continue;
-                    }
-
-                    const restitution = Math.min(object1.restitution, object2.restitution);
-                    let impulseMagnitude = -(1 + restitution) * velocityAlongNormal / ((1 / object1.mass)+ (1 / object2.mass));
-
-                    const maxImpulse = 1000;
-                    if (impulseMagnitude > maxImpulse) {
-                        impulseMagnitude = maxImpulse;
-                    }
-
-                    const impulse = collisionDirection.multiply(impulseMagnitude);
-
-
-                    object1.velocity = object1.velocity.clone().add(impulse.clone().multiply(1 / object1.mass));
-                    object2.velocity = object2.velocity.clone().subtract(impulse.clone().multiply(1/ object2.mass));
-                }
-            }
-        }
-
-        for (let i = 0; i < physicsEngine.current.objects.length; i++) {
-            if (intersections.find(index => index === i) === undefined) {
-                physicsEngine.current.objects[i].color = "black";
-            } else {
-                physicsEngine.current.objects[i].color = "red";
-            }
-        }
-    }
-
-     */
 
 
 
@@ -121,14 +71,7 @@ export default function Render2D({selectedTool, setSelectedTool, settings, physi
 
             collisionDetection();
 
-
-
-
-
             physicsEngine.current.integrate(deltaTime, settingsRef);
-
-
-
 
 
             // Check for objects outside canvas bounds
@@ -234,22 +177,6 @@ export default function Render2D({selectedTool, setSelectedTool, settings, physi
                 }
             })
 
-
-
-        /*
-            shapes.every(s => {
-                const intersectData = shape.intersect(s);
-                if (intersectData.doesIntersect){
-                    shape.color = "red";
-                    s.color = "red"
-                    return false;
-                }
-                else {
-                    return true;
-                }
-            })
-
-         */
             physicsEngine.current.addObject(object)
             setShapes([...shapes, object]);
         }

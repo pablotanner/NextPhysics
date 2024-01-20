@@ -92,14 +92,6 @@ export default class BoundingSphere extends PhysicsObject {
         ctx.fillStyle = this.color;
         ctx.fill();
     }
-    /*
-    integrate(deltaTime, settingsRef){
-        // Inherit but also update center
-        super.integrate(deltaTime, settingsRef);
-        //this.center = this.position;
-    }
-
-     */
 
 }
 //const one = new BoundingSphere(new Vector({x: 0, y: 1}), 1);

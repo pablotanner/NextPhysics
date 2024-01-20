@@ -44,16 +44,6 @@ export default class Plane extends PhysicsObject {
 
     intersectSphere(sphere) {
         return sphere.intersectPlane(this);
-        /*
-        const normalizedNormal = this.normalized();
-        const distanceFromSphereCenter = normalizedNormal.normal.getDotProduct(sphere.center) - normalizedNormal.distance;
-
-        // Check if the sphere and the plane are intersecting
-        const doesIntersect = Math.abs(distanceFromSphereCenter) <= sphere.radius;
-
-        return new IntersectData(doesIntersect, distanceFromSphereCenter);
-
-         */
     }
 
     intersectPoint(pointVector) {
@@ -66,16 +56,6 @@ export default class Plane extends PhysicsObject {
 
     intersectAABB(aabb) {
         return aabb.intersectPlane(this);
-        /*
-        const center = aabb.minExtents.clone().add(aabb.maxExtents).divide(2);
-        const extents = aabb.maxExtents.clone().subtract(center);
-
-        const r = extents.vector.x * Math.abs(this.normal.vector.x) + extents.vector.y * Math.abs(this.normal.vector.y) //+ extents.vector.z * Math.abs(this.normal.vector.z);
-        const s = this.normal.getDotProduct(center) - this.distance;
-
-        return new IntersectData(Math.abs(s) <= r, s - r);
-
-         */
     }
 
     intersectPlane(plane) {

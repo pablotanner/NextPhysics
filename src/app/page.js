@@ -247,7 +247,6 @@ export default function Home() {
                           physicsEngine={physicsEngine}/>
                 <canvas id="physicsCanvas"
                         style={{cursor: "pointer", height: "100%", width: "100%", border: "solid #4F46E5 2px"}}/>
-                {/*<canvas id="physicsCanvas" className="h-full w-full"/>*/}
             </div>
         </div>)
 }

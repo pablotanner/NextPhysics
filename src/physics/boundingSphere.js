@@ -86,7 +86,7 @@ export default class BoundingSphere extends PhysicsObject {
 
         const distance = Math.sqrt((x - this.center.vector.x) * (x - this.center.vector.x) + (y - this.center.vector.y) * (y - this.center.vector.y));
 
-        return new IntersectData(distance < this.radius, direction, distance - this.radius);
+        return new IntersectData(distance < this.radius, direction, Math.abs(distance - this.radius));
 
     }
 
@@ -125,44 +125,45 @@ export default class BoundingSphere extends PhysicsObject {
 
         this.velocity = this.velocity.clone().subtract(impulse.clone().divide(this.mass));
         sphere.velocity = sphere.velocity.clone().add(impulse.clone().divide(sphere.mass));
-
-        // Friction
-        const frictionCoefficient = 0.5; // Adjust this value to your needs
-        const tangent = relativeVelocity.clone().subtract(normal.clone().multiply(relativeVelocity.getDotProduct(normal))).normalize();
-        const jt = -relativeVelocity.getDotProduct(tangent);
-        const jtDivide = jt / (1 / this.mass + 1 / sphere.mass);
-
-        let frictionImpulse;
-        if (Math.abs(jtDivide) < j * frictionCoefficient) {
-            frictionImpulse = tangent.clone().multiply(jtDivide);
-        } else {
-            frictionImpulse = tangent.clone().multiply(-j).multiply(frictionCoefficient);
-        }
-
-        this.velocity = this.velocity.clone().subtract(frictionImpulse.clone().divide(this.mass));
-        sphere.velocity = sphere.velocity.clone().add(frictionImpulse.clone().divide(sphere.mass));
     }
 
     resolveCollisionAABB(aabb, intersectData) {
         const direction = intersectData.direction;
         const distance = intersectData.distance;
 
+        // Calculate the penetration depth
+        const penetration = this.radius - distance;
 
-        // If the sphere is intersecting with the AABB
-        if (distance < 0) {
-            // Move the sphere out of the AABB
-            this.position = this.position.clone().add(direction.clone().multiply(distance));
+        // Calculate the separation vector
+        const separation = direction.clone().multiply(penetration / 2);
 
-            // Reflect the sphere's velocity about the AABB's normal
-            const reflectedVelocity = this.velocity.reflect(direction);
+        // Move the sphere out of the AABB
+        this.center = this.center.clone().subtract(separation);
 
-            // Scale the reflected velocity by the sphere's restitution
-            const finalVelocity = reflectedVelocity.multiply(this.restitution);
+        // Calculate the relative velocity
+        const relativeVelocity = aabb.velocity.clone().subtract(this.velocity);
 
-            // Set the sphere's velocity to the final velocity
-            this.velocity = finalVelocity;
+        // Calculate the velocity along the normal
+        const velocityAlongNormal = relativeVelocity.getDotProduct(direction);
+
+        // If the velocities are separating, return
+        if (velocityAlongNormal > 0) {
+            return;
         }
 
+        // Calculate the restitution
+        const e = Math.min(this.restitution, aabb.restitution);
+
+        // Calculate the impulse scalar
+        const j = -(1 + e) * velocityAlongNormal;
+        const jDivide = j / (1 / this.mass + 1 / aabb.mass);
+
+        // Calculate the impulse
+        const impulse = direction.clone().multiply(jDivide);
+
+        // Apply the impulse
+        this.velocity = this.velocity.clone().subtract(impulse.clone().divide(this.mass));
+        aabb.velocity = aabb.velocity.clone().add(impulse.clone().divide(aabb.mass));
     }
 
     resolveCollisionPlane(plane, intersectData) {

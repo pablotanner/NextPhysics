@@ -1,10 +1,23 @@
+import Vector from "@/physics/vector";
 
 class IntersectData {
 
     // doesIntersect is bool, distance is float
-    constructor(doesIntersect, distance){
+    constructor(doesIntersect, direction, distance){
         this._doesIntersect = doesIntersect;
+        this._direction = direction;
         this._distance = distance;
+    }
+
+    get direction(){
+        return this._direction;
+    }
+
+    set direction(direction){
+        if(!(direction instanceof Vector)){
+            throw new Error("direction must be an instance of Vector");
+        }
+        this._direction = direction;
     }
 
     get doesIntersect(){
@@ -22,12 +35,6 @@ class IntersectData {
         this._doesIntersect = doesIntersect;
     }
 
-    set distance(distance){
-        if(typeof distance !== "number"){
-            throw new Error("distance must be a number");
-        }
-        this._distance = distance;
-    }
 
 }
 

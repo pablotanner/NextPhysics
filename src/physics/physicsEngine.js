@@ -1,9 +1,23 @@
+import ObjectTypes from "@/physics/ObjectTypes";
 
 
 export default class PhysicsEngine {
-    constructor() {
+    constructor(settings) {
         // Array of PhysicsObject instances
         this.objects = [];
+        this._settings = settings;
+    }
+
+    reset() {
+        this.objects = [];
+    }
+
+    get settings(){
+        return this._settings;
+    }
+
+    set settings(settings) {
+        this._settings = settings;
     }
 
 
@@ -19,19 +33,64 @@ export default class PhysicsEngine {
     }
 
 
-    collisionDetection() {
+    handleCollisions() {
+        const hasIntersection = []
         for (let i = 0; i < this.objects.length; i++) {
             for (let j = i + 1; j < this.objects.length; j++) {
-                if (this.objects[i].intersects(this.objects[j])) {
-                    // Handle
+                const intersectData = this.objects[i].intersect(this.objects[j]);
+                if (intersectData.doesIntersect) {
+                    hasIntersection.push(i)
+                    hasIntersection.push(j)
+                    // Change colors for visibility
+                    this.objects[i].color = "red";
+                    this.objects[j].color = "red";
+
+                    // Resolve collision
+                    this.objects[i].resolveCollision(this.objects[j], intersectData);
+
                 }
+            }
+        }
+        // Set all objects that don't have an intersection to black
+        for (let i = 0; i < this.objects.length; i++) {
+            if (hasIntersection.find(index => index === i) === undefined) {
+                this.objects[i].color = "black";
             }
         }
     }
 
-    integrate(deltaTime, settingsRef) {
+    applyDrag() {
+        const airDensity = this.settings.airDensity;
         this.objects.forEach((object) => {
-            object.integrate(deltaTime, settingsRef);
+            const velocityMagnitude = object.velocity.getLength();
+            let dragMagnitude = 0.5 * airDensity * object.drag * object.surfaceArea * velocityMagnitude * velocityMagnitude;
+
+            const dragForce = object.velocity.clone().normalize().multiply(-dragMagnitude);
+
+            object.applyForce(dragForce);
         });
     }
+
+    applyFriction() {
+        this.objects.forEach((object) => {
+            const frictionForce = object.velocity.clone().normalize().multiply(-object.friction * object.mass * this.settings.gravity);
+            object.applyForce(frictionForce);
+        });
+    }
+
+
+
+    integrate(deltaTime) {
+        this.objects.forEach((object) => {
+            object.integrate(deltaTime, this.settings);
+        });
+    }
+
+    update(deltaTime) {
+        this.applyDrag();
+        //this.applyFriction();
+        this.integrate(deltaTime);
+        this.handleCollisions();
+    }
+
 }

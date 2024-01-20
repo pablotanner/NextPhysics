@@ -6,48 +6,8 @@ import AABB from "./aabb.js";
 import Plane from "@/physics/plane";
 import PhysicsEngine from "@/physics/physicsEngine";
 
-export default function Render2D({selectedTool, setSelectedTool, settings, physicsEngine}) {
-    const settingsRef = useRef(settings)
-    useEffect(() => {
-        settingsRef.current = settings;
-    }, [settings]);
-
+export default function Render2D({selectedTool, physicsEngine}) {
     const [shapes, setShapes] = useState([]);
-
-    const resetCanvas = () => {
-        physicsEngine.current = new PhysicsEngine();
-        setShapes([]);
-        setSelectedTool("select");
-    }
-
-    if(selectedTool === "reset" && (shapes.length > 0 || physicsEngine.current.objects.length > 0)) resetCanvas();
-
-
-    function collisionDetection() {
-        const intersections = []
-        // Check for collisions and handle them
-        for (let i = 0; i < physicsEngine.current.objects.length; i++) {
-            for (let j = i + 1; j < physicsEngine.current.objects.length; j++) {
-                const object1 = physicsEngine.current.objects[i];
-                const object2 = physicsEngine.current.objects[j];
-                if (object1.intersect(object2).doesIntersect) {
-                    console.log(object1.intersect(object2))
-                    intersections.push(i)
-                    intersections.push(j)
-                }
-            }
-        }
-
-        for (let i = 0; i < physicsEngine.current.objects.length; i++) {
-            if (intersections.find(index => index === i) === undefined) {
-                physicsEngine.current.objects[i].color = "black";
-            } else {
-                physicsEngine.current.objects[i].color = "red";
-            }
-        }
-    }
-
-
 
 
     useEffect(() => {
@@ -56,30 +16,33 @@ export default function Render2D({selectedTool, setSelectedTool, settings, physi
 
         // Simulate physics
         function simulate() {
-            const isPaused = settingsRef.current.paused;
-            const constant_gravity = settingsRef.current.gravity * 1000;
-            const constant_airDensity = settingsRef.current.airDensity;
+            const isPaused = physicsEngine.current.settings.paused;
+            const constant_gravity = physicsEngine.current.settings.gravity * 100;
 
-            if (isPaused) return;
+            if (isPaused) {
+                // Just update shape state
+                setShapes(physicsEngine.current.objects.map(object => object))
+                return;
+            }
 
             const canvas = document.getElementById('physicsCanvas');
             physicsEngine.current.objects.forEach(object => {
-                const gravity = new Vector({x: 0, y: constant_gravity, z: 0});
+                const gravity = new Vector({x: 0, y: constant_gravity});
                 // F = m*a
                 object.force = gravity.clone().multiply(object.mass);
             });
 
-            collisionDetection();
-
-            physicsEngine.current.integrate(deltaTime, settingsRef);
-
+            // Run simulation, update positions, collisions, etc.
+            physicsEngine.current.update(deltaTime);
 
             // Check for objects outside canvas bounds
             physicsEngine.current.objects = physicsEngine.current.objects.filter(object => {
+                const threshold = object.radius || (object.maxExtents?.vector?.y - object.minExtents?.vector?.y) || 50;
                 const position = object.position.vector;
-                const height = Number(canvas.style.height.replace("px", "")) + 40;
-                const width = Number(canvas.style.width.replace("px", ""));
-                const inBounds = position.x >= 0 && position.x <= width && position.y >= 0 && position.y <= height;
+                const height = Number(canvas.style.height.replace("px", "")) + threshold;
+                //const width = Number(canvas.style.width.replace("px", ""));
+                //const inBounds = position.x >= 0 && position.x <= width && position.y >= 0 && position.y <= height;
+                const inBounds = position.y <= height;
                 if (!inBounds) {
                     // Remove object from shapes state as well
                     setShapes(shapes => shapes.filter(shape => shape !== object));
@@ -122,9 +85,9 @@ export default function Render2D({selectedTool, setSelectedTool, settings, physi
             const x = event.clientX - rect.left;
             const y = event.clientY - rect.top; //rect.top;
 
-            const constant_size = settingsRef.current.size;
-            const constant_mass = settingsRef.current.mass;
-            const constant_velocity = settingsRef.current.velocity;
+            const constant_size = physicsEngine.current.settings.size;
+            const constant_mass = physicsEngine.current.settings.mass * 100; // kg
+            const constant_velocity = physicsEngine.current.settings.velocity;
 
             let object;
             if (selectedTool === "circle"){
@@ -134,19 +97,21 @@ export default function Render2D({selectedTool, setSelectedTool, settings, physi
                     mass: constant_mass,
                     drag: 0.47,
                     velocity: new Vector({x: 0, y: 0}),
-                    restitution: 0.8,
-                    color: "black"
+                    restitution: 1,
+                    color: "black",
+                    friction: 0
                 });
             }
             else if (selectedTool === "square"){
                 object = new AABB({
-                    minExtents: new Vector({x: x-constant_size/2, y: y-constant_size/2, z: 0}),
-                    maxExtents: new Vector({x: x+constant_size/2, y: y+constant_size/2, z: 0}),
+                    minExtents: new Vector({x: x-constant_size/2, y: y-constant_size/2}),
+                    maxExtents: new Vector({x: x+constant_size/2, y: y+constant_size/2}),
                     mass: constant_mass,
                     drag: 1.05,
                     velocity: new Vector({x: 0, y: 0}),
-                    restitution: 1,
-                    color: "black"
+                    restitution: 0.5,
+                    color: "black",
+                    friction: 0.5
                 });
             }
             else if (selectedTool === "plane"){
@@ -154,11 +119,12 @@ export default function Render2D({selectedTool, setSelectedTool, settings, physi
                 object = new Plane({
                     normal: new Vector({x: 0, y: 1}),
                     distance: dist,
-                    mass: 1,
+                    mass: Infinity,
                     drag: 0,
                     velocity: new Vector({x: 0, y: 0}),
                     restitution: 1,
-                    color: "black"
+                    color: "black",
+                    friction: 0.1
                 });
             }
             else {
@@ -178,7 +144,7 @@ export default function Render2D({selectedTool, setSelectedTool, settings, physi
             })
 
             physicsEngine.current.addObject(object)
-            setShapes([...shapes, object]);
+            setShapes(shapes => [...shapes, object]);
         }
 
         function handleElementSelect(event){
@@ -189,7 +155,6 @@ export default function Render2D({selectedTool, setSelectedTool, settings, physi
             [...shapes].reverse().find(shape => {
                 if (found) return true;
                 const intersectData = shape.intersectPoint(position)
-                console.log(shape,position,intersectData)
                 if (intersectData.doesIntersect){
                     physicsEngine.current.removeObject(shape)
                     setShapes(shapes.filter(s => s !== shape));
@@ -203,7 +168,6 @@ export default function Render2D({selectedTool, setSelectedTool, settings, physi
         // Add click event listener
         canvas.addEventListener('click', handleClick);
         canvas.addEventListener('contextmenu', handleElementSelect);
-
 
         //shapes.forEach(shape => shape.draw(ctx));
         physicsEngine.current.objects.forEach(object => object.draw(ctx));

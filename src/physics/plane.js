@@ -51,7 +51,7 @@ export default class Plane extends PhysicsObject {
         const signedDistance = this.normal.getDotProduct(pointVector) - this.distance;
 
         // If the absolute value of the distance is less than the sphere's radius, the sphere and the plane are intersecting
-        return new IntersectData(Math.abs(signedDistance) < 0, Math.abs(signedDistance));
+        return new IntersectData(Math.abs(signedDistance) < 0, {x: 0, y: 0});
     }
 
     intersectAABB(aabb) {
@@ -62,8 +62,22 @@ export default class Plane extends PhysicsObject {
         const signedDistance = this.normal.getDotProduct(plane.normal) - this.distance;
 
         // If the absolute value of the distance is less than the sphere's radius, the sphere and the plane are intersecting
-        return new IntersectData(Math.abs(signedDistance) < 0, Math.abs(signedDistance));
+        return new IntersectData(Math.abs(signedDistance) < 0, {x: 0, y: 0});
     }
+
+
+    resolveCollisionAABB(aabb, intersectData) {
+        aabb.resolveCollisionPlane(this, intersectData);
+    }
+
+    resolveCollisionPlane(plane, intersectData) {
+        // Do nothing
+    }
+
+    resolveCollisionSphere(sphere, intersectData) {
+        sphere.resolveCollisionPlane(this, intersectData);
+    }
+
 
     draw(ctx){
         const yIntercept = this.distance;

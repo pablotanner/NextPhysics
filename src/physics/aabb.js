@@ -15,6 +15,17 @@ export default class AABB extends PhysicsObject {
         this._objectType = objectTypes.AABB;
     }
 
+
+    get position(){
+        return this._minExtents;
+    }
+    set position(position){
+        const width = this.maxExtents.vector.x - this.minExtents.vector.x;
+        const height = this.maxExtents.vector.y - this.minExtents.vector.y;
+        this._minExtents = position;
+        this._maxExtents = this._minExtents.clone().add(new Vector({x: width, y: height}));
+    }
+
     calculateSurfaceArea() {
         const width = this.maxExtents.vector.x - this.minExtents.vector.x;
         const height = this.maxExtents.vector.y - this.minExtents.vector.y;
@@ -56,27 +67,21 @@ export default class AABB extends PhysicsObject {
             maxX: this.maxExtents.vector.x,
             minY: this.minExtents.vector.y,
             maxY: this.maxExtents.vector.y,
-            minZ: this.minExtents.vector.z,
-            maxZ: this.maxExtents.vector.z
         };
 
         //return new IntersectData((point.x >= box.minX && point.x <= box.maxX) && (point.y >= box.minY && point.y <= box.maxY) && (point.z >= box.minZ && point.z <= box.maxZ), 0);
-        return new IntersectData((point.x >= box.minX && point.x <= box.maxX) && (point.y >= box.minY && point.y <= box.maxY), 0);
+        return new IntersectData((point.x >= box.minX && point.x <= box.maxX) && (point.y >= box.minY && point.y <= box.maxY), {x: 0, y: 0}, 0);
     }
 
     intersectAABB(otherAABB) {
-        const min1 = this.minExtents.vector;
-        const max1 = this.maxExtents.vector;
-        const min2 = otherAABB.minExtents.vector;
-        const max2 = otherAABB.maxExtents.vector;
+        const distances1 = otherAABB.minExtents.clone().subtract(this.maxExtents);
+        const distances2 = this.minExtents.clone().subtract(otherAABB.maxExtents);
 
-        for (let dimension in min1) {
-            if (max1[dimension] < min2[dimension] || min1[dimension] > max2[dimension]) {
-                return new IntersectData(false, 0);
-            }
-        }
-        // If none of the above conditions are met, the AABBs are intersecting.
-        return new IntersectData(true, 0);
+        const distances = distances1.clone().max(distances2);
+
+        const maxDistance = distances.max();
+
+        return new IntersectData(maxDistance < 0, distances, maxDistance);
 
     }
 
@@ -87,7 +92,9 @@ export default class AABB extends PhysicsObject {
         const r = extents.vector.x * Math.abs(plane.normal.vector.x) + extents.vector.y * Math.abs(plane.normal.vector.y);// + extents.vector.z * Math.abs(plane.normal.vector.z);
         const s = plane.normal.getDotProduct(center) - plane.distance;
 
-        return new IntersectData(Math.abs(s) <= r, s - r);
+        // Direction is the normal of the plane
+
+        return new IntersectData(Math.abs(s) <= r, plane.normal.clone(), Math.abs(s) - r);
     }
 
 
@@ -100,9 +107,52 @@ export default class AABB extends PhysicsObject {
         ctx.fill();
     }
 
+    resolveCollisionPlane(plane, intersectData) {
+        const direction = intersectData.direction;
+
+        const distance = intersectData.distance;
+
+        if (distance < 0) {
+            this.position = this.position.clone().add(direction.clone().multiply(distance));
+        }
+    }
+
+    resolveCollisionAABB(aabb, intersectData) {
+        // Calculate the centers of the AABBs
+        const center1 = aabb.minExtents.clone().add(aabb.maxExtents.clone()).divide(2);
+        const center2 = this.minExtents.clone().add(this.maxExtents.clone()).divide(2);
+
+        // Calculate the collision normal
+        const collisionNormal = center2.clone().subtract(center1).normalize();
+
+        // Calculate the half extents of the AABBs
+        const halfExtents1 = aabb.maxExtents.clone().subtract(aabb.minExtents).divide(2);
+        const halfExtents2 = this.maxExtents.clone().subtract(this.minExtents).divide(2);
+
+        // Calculate the overlap along the collision normal
+        const overlap = halfExtents1.add(halfExtents2).subtract(center2.subtract(center1).abs());
+
+        // Calculate the penetration depth
+        const penetrationDepth = overlap.max();
+
+        // Calculate the total inverse mass
+        const totalInverseMass = aabb.inverseMass + this.inverseMass;
+
+        // Calculate the movement vector
+        const movement = collisionNormal.clone().multiply(penetrationDepth / totalInverseMass);
+
+        // Move the AABB out of the collision
+        aabb.minExtents = aabb.minExtents.clone().subtract(movement.clone().multiply(aabb.inverseMass));
+        aabb.maxExtents = aabb.maxExtents.clone().subtract(movement.clone().multiply(aabb.inverseMass));
+    }
+
+    resolveCollisionSphere(sphere, intersectData) {
+        sphere.resolveCollisionAABB(this, intersectData);
+    }
+
     // Special integrate method for AABB
-    integrate(deltaTime, settingsRef) {
-        super.integrate(deltaTime, settingsRef);
+    integrate(deltaTime, settings) {
+        super.integrate(deltaTime, settings);
         const deltaPosition = this.velocity.clone().multiply(deltaTime);
         this.minExtents = this.minExtents.clone().add(deltaPosition);
         this.maxExtents = this.maxExtents.clone().add(deltaPosition);

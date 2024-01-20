@@ -7,7 +7,7 @@ import {WrenchIcon} from "@heroicons/react/16/solid";
 import Link from "next/link";
 import Render2D from "../physics/render2D.js";
 import ToolDropdown from "../components/ToolDropdown.js";
-import {useRef, useState} from "react";
+import {useEffect, useRef, useState} from "react";
 import AboutModal from "../components/AboutModal.js";
 import PhysicsEngine from "@/physics/physicsEngine";
 import {Switch} from "@headlessui/react";
@@ -16,15 +16,21 @@ import CurrentTool from "@/components/CurrentTool";
 
 export default function Home() {
     const [selectedTool, setSelectedTool] = useState("select");
-    const physicsEngine = useRef(new PhysicsEngine());
 
     const defaultSettings = {
-        gravity: 9.8, mass: 1, size: 30, velocity: 1, airDensity:1.225,  paused: false,
+        gravity: 9.8, mass: 1000, size: 30, velocity: 1, airDensity:1.225,  paused: false,
     }
 
-    const [settings, setSettings] = useState({
-        gravity: 9.8, mass: 1, size: 30, velocity: 1, airDensity:1.225, paused: false,
-    })
+    const [settings, setSettings] = useState(defaultSettings);
+
+    const physicsEngine = useRef(new PhysicsEngine(settings));
+
+
+    useEffect(() => {
+        physicsEngine.current.settings = settings;
+    }, [settings]);
+
+
 
     const pauseToggle = (<Switch
             checked={settings.paused}
@@ -109,7 +115,7 @@ export default function Home() {
                                         type="button"
                                         className="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
                                         onClick={() => {
-                                            setSelectedTool("reset")
+                                            physicsEngine.current.reset()
                                         }}
                                     >
                                         Reset Env
@@ -129,7 +135,7 @@ export default function Home() {
                                 type="number"
                                 name="mass"
                                 min={0}
-                                max={10000}
+                                max={100000}
                                 id="mass"
                                 value={settings.mass}
                                 onChange={(e) => setSettings({...settings, mass: Number(e.target.value)})}

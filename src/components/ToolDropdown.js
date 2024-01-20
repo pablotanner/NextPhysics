@@ -98,24 +98,6 @@ export default function ToolDropdown({selectedTool, setSelectedTool}) {
                                 )}
                             </Menu.Item>
                         </div>
-                        <div className="px-1 py-1">
-                            <Menu.Item>
-                                {({active}) => (
-                                    <button className={`${active ? 'bg-violet-500 text-white' : 'text-gray-900'} group flex rounded-md items-center w-full px-2 py-2 text-sm`}
-                                            onClick={(event) => {
-                                                event.preventDefault();
-                                                setSelectedTool("reset");
-                                            }}
-                                    >
-                                        <TrashIcon
-                                            className="mr-2 h-5 w-5"
-                                            aria-hidden="true"
-                                        />
-                                        Reset
-                                    </button>
-                                )}
-                            </Menu.Item>
-                        </div>
                     </Menu.Items>
                 </Transition>
             </Menu>

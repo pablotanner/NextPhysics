@@ -2,15 +2,31 @@ import Vector from "./vector.js";
 import ObjectTypes from "@/physics/ObjectTypes";
 
 export default class PhysicsObject {
-    constructor({ position, velocity=new Vector({x:0, y:0}), mass, restitution, surfaceArea, color="black", drag=0 }) {
+    constructor({ position, velocity=new Vector({x:0, y:0}), mass, restitution, surfaceArea, color="black", drag=0, friction=0 }) {
         this._motion = { position, velocity };
         this._mass = mass;
         this._restitution = restitution;
         this._color = color;
-        this._force = new Vector({ x: 0, y: 0, z: 0 });
+        this._friction = friction;
+        this._force = new Vector({ x: 0, y: 0});
         this._drag = drag;
         this._surfaceArea = surfaceArea;
         this._objectType = "PhysicsObject";
+    }
+
+    get friction(){
+        return this._friction;
+    }
+
+    set friction(friction){
+        if(typeof friction !== "number"){
+            throw new Error("friction must be a number");
+        }
+        this._friction = friction;
+    }
+
+    applyForce(force) {
+        this.force = this.force.clone().add(force);
     }
 
     get objectType(){
@@ -148,6 +164,39 @@ export default class PhysicsObject {
         throw new Error("intersectPlane method must be implemented");
     }
 
+    resolveCollisionPoint(point, intersectData){
+        // Do nothing
+    }
+
+    resolveCollisionSphere(sphere, intersectData){
+        throw new Error("resolveCollisionSphere method must be implemented");
+
+    }
+
+    resolveCollisionAABB(aabb, intersectData){
+        throw new Error("resolveCollisionAABB method must be implemented");
+
+    }
+
+    resolveCollisionPlane(plane, intersectData){
+        throw new Error("resolveCollisionPlane method must be implemented");
+    }
+
+    resolveCollision(other, intersectData) {
+        switch (other.objectType) {
+            case ObjectTypes.POINT:
+                return this.resolveCollisionPoint(other, intersectData);
+            case ObjectTypes.CIRCLE:
+                return this.resolveCollisionSphere(other, intersectData);
+            case ObjectTypes.AABB:
+                return this.resolveCollisionAABB(other, intersectData);
+            case ObjectTypes.LINE:
+                return this.resolveCollisionPlane(other, intersectData);
+            default:
+                throw new Error("objectType not recognized");
+        }
+    }
+
     intersect(other) {
         switch (other.objectType) {
             case ObjectTypes.POINT:
@@ -168,33 +217,18 @@ export default class PhysicsObject {
 
     // based on velocity of PhysicsObject, update position (deltaTime is in seconds)
 // based on velocity of PhysicsObject, update position (deltaTime is in seconds)
-    integrate(deltaTime, settingsRef){
-        // Calculate drag force
-
-        const velocityMagnitude = this.velocity.getLength();
-        let dragMagnitude = 0.5 * settingsRef.current.airDensity * this.drag * this.surfaceArea * velocityMagnitude * velocityMagnitude;
-
-        const maxDrag = 1000;
-        if (dragMagnitude > maxDrag){
-            dragMagnitude = maxDrag;
-        }
-        const dragForce = this.velocity.clone().normalize().multiply(-dragMagnitude);
-
-        // Calculate net force
-        const netForce = this.force.clone().add(dragForce);
-
+    integrate(deltaTime, settings){
         // Calculate acceleration from force and mass
-        const acceleration = netForce.divide(this.mass);
+        const acceleration = this.force.clone().divide(this.mass);
 
         // Update velocity based on acceleration
-        this.velocity = this.velocity.clone().add(acceleration.multiply(deltaTime));
+        this.velocity = this.velocity.clone().add(acceleration.clone().multiply(deltaTime));
 
         // Update position based on velocity
         this.position = this.position.clone().add(this.velocity.clone().multiply(deltaTime));
 
-
         // Reset force for the next frame
-        this.force = new Vector({x: 0, y: 0, z: 0});
+        this.force = new Vector({x: 0, y: 0});
     }
 }
 

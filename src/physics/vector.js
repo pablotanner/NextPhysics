@@ -146,4 +146,18 @@ export default class Vector {
         });
         return this;
     }
+
+    reflect(vector) {
+        const normal = vector.clone().normalize();
+        const d = this.getDotProduct(normal);
+        const tmpVector = normal.clone().multiply(2 * d);
+        return this.clone().subtract(tmpVector);
+    }
+
+    abs(){
+        this.getComponents().forEach((k) => {
+            this.vector[k] = Math.abs(this.vector[k]);
+        });
+        return this;
+    }
 }

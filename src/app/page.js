@@ -215,7 +215,7 @@ export default function Home() {
      */
 
 
-    return (<div className="container" >
+    return (<div className="container">
             <div className="lg:flex lg:items-center lg:justify-between">
                 <div className="min-w-0 flex-1">
                     <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">
@@ -253,6 +253,22 @@ export default function Home() {
                 <Render2D selectedTool={selectedTool} setSelectedTool={setSelectedTool} settings={settings}
                           physicsEngine={physicsEngine.current}/>
                 <canvas id="physicsCanvas"
+                        onTouchStart={(e) => {
+                            e.preventDefault();
+                        }}
+                        onTouchMove={(e) => {
+                            e.preventDefault();
+                        }}
+                        onTouchEnd={(e) => {
+                            e.preventDefault();
+                        }}
+                        onTouchCancel={(e) => {
+                            e.preventDefault();
+                        }}
+                        onTouchStartCapture={(e) => {
+                            e.preventDefault();
+                        }}
+
                         style={{cursor: "pointer", height: "100%", width: "100%", border: "solid #4F46E5 2px"}}/>
             </div>
         </div>)

@@ -259,13 +259,7 @@ export default function Home() {
                         onTouchMove={(e) => {
                             e.preventDefault();
                         }}
-                        onTouchEnd={(e) => {
-                            e.preventDefault();
-                        }}
                         onTouchCancel={(e) => {
-                            e.preventDefault();
-                        }}
-                        onTouchStartCapture={(e) => {
                             e.preventDefault();
                         }}
 

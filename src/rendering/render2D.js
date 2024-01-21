@@ -203,20 +203,23 @@ export default function Render2D({selectedTool, physicsEngine}) {
             event.preventDefault();
         }
 
-        // Mobile
         function handleTouchStart(event){
+            //event.preventDefault();
             handleMouseDown(event.touches[0]);
         }
 
         function handleTouchMove(event){
+            event.preventDefault();
             handleMouseMove(event.touches[0]);
         }
 
         function handleTouchEnd(event){
+            //event.preventDefault();
             handleMouseUp(event.changedTouches[0]);
         }
 
         function handleTouchCancel(event){
+            //event.preventDefault();
             handleMouseUp(event.changedTouches[0]);
         }
 

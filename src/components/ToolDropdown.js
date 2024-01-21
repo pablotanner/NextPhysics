@@ -2,7 +2,7 @@
 import { Menu, Transition } from '@headlessui/react'
 import { Fragment, useEffect, useRef, useState } from 'react'
 import {ChevronDownIcon, CursorArrowRaysIcon, MinusIcon, TrashIcon} from '@heroicons/react/20/solid'
-import {StopIcon} from "@heroicons/react/16/solid";
+import {PencilIcon, StopIcon} from "@heroicons/react/16/solid";
 
 
 export default function ToolDropdown({selectedTool, setSelectedTool}) {
@@ -94,6 +94,23 @@ export default function ToolDropdown({selectedTool, setSelectedTool}) {
                                             active={active}
                                         />
                                         Place Floor
+                                    </button>
+                                )}
+                            </Menu.Item>
+                            <Menu.Item>
+                                {({active}) => (
+                                    <button className={`${active ? 'bg-violet-500 text-white' : 'text-gray-900'} group flex rounded-md items-center w-full px-2 py-2 text-sm`}
+                                            onClick={(event) => {
+                                                event.preventDefault();
+                                                setSelectedTool("edit")
+                                            }}
+                                    >
+                                        <PencilIcon
+                                            className="mr-2 h-5 w-5"
+                                            aria-hidden="true"
+                                            active={active}
+                                        />
+                                        Edit
                                     </button>
                                 )}
                             </Menu.Item>

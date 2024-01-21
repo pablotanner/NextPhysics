@@ -173,6 +173,11 @@ export default function Render2D({selectedTool, physicsEngine}) {
                     friction: 0.1
                 });
             }
+            else if (selectedTool === "edit"){
+                const closestObject = findClosestElement({mousePosition: new Vector({x: x, y:y}), objects: physicsEngine.objects})
+                setSelectedObject({object: closestObject, position: {x: event.pageX, y: event.pageY}});
+                return;
+            }
             else {
                 return;
             }
@@ -191,7 +196,9 @@ export default function Render2D({selectedTool, physicsEngine}) {
             })
              */
 
-            physicsEngine.addObject(object)
+            if (object){
+                physicsEngine.addObject(object)
+            }
         }
 
         function handleElementSelect(event){
@@ -240,7 +247,8 @@ export default function Render2D({selectedTool, physicsEngine}) {
         canvas.addEventListener('mouseup', handleMouseUp);
 
         //shapes.forEach(shape => shape.draw(ctx));
-        physicsEngine.objects.forEach(object => object.draw(ctx));
+
+        physicsEngine.objects.forEach(object => object && object.draw(ctx));
 
 
 

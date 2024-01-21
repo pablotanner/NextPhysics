@@ -1,16 +1,23 @@
 'use client'
-import BoundingSphere from "./boundingSphere.js";
-import Vector from "./vector.js";
-import {useEffect, useState} from "react";
-import AABB from "./aabb.js";
+import BoundingSphere from "../physics/boundingSphere.js";
+import Vector from "../physics/vector.js";
+import {useContext, useEffect, useState} from "react";
+import AABB from "../physics/aabb.js";
 import Plane from "@/physics/plane";
+import ObjectMenu from "@/components/ObjectMenu";
+import findClosestElement from "@/rendering/utility/findClosestElement";
 
 export default function Render2D({selectedTool, physicsEngine}) {
+
     const [shapes, setShapes] = useState([]);
 
-    const [selectedObject, setSelectedObject] = useState(null);
-    const [previousMousePosition, setPreviousMousePosition] = useState(null);
+    // Used for dragging objects
+    const [draggingObject, setDraggingObject] = useState(null);
 
+    // Used for selecting objects
+    const [selectedObject, setSelectedObject] = useState({object: null, position: {x: 0, y: 0}});
+
+    const [previousMousePosition, setPreviousMousePosition] = useState(null);
 
 
     useEffect(() => {
@@ -19,29 +26,23 @@ export default function Render2D({selectedTool, physicsEngine}) {
 
         // Simulate physics
         function simulate() {
-            const isPaused = physicsEngine.current.settings.paused;
+            const isPaused = physicsEngine.settings.paused;
+            const objectContextMenu = document.getElementById('object-context-menu');
 
-            if (isPaused) {
+
+            if (isPaused || objectContextMenu) {
                 // Just update shape state
-                setShapes(physicsEngine.current.objects.map(object => object))
+                setShapes(physicsEngine.objects.map(object => object))
                 return;
             }
 
             const canvas = document.getElementById('physicsCanvas');
-            /*
-            physicsEngine.current.objects.forEach(object => {
-                const gravity = new Vector({x: 0, y: constant_gravity});
-                // F = m*a
-                object.force = gravity.clone().multiply(object.mass);
-            });
-
-             */
 
             // Run simulation, update positions, collisions, etc.
-            physicsEngine.current.update(deltaTime);
+            physicsEngine.update(deltaTime);
 
             // Check for objects outside canvas bounds
-            physicsEngine.current.objects = physicsEngine.current.objects.filter(object => {
+            physicsEngine.objects = physicsEngine.objects.filter(object => {
                 const threshold = object.radius || (object.maxExtents?.vector?.y - object.minExtents?.vector?.y) || 50;
                 const position = object.position.vector;
                 const height = Number(canvas.style.height.replace("px", "")) + threshold;
@@ -55,7 +56,7 @@ export default function Render2D({selectedTool, physicsEngine}) {
                 return inBounds;
             });
 
-            setShapes(physicsEngine.current.objects.map(object => object))
+            setShapes(physicsEngine.objects.map(object => object))
 
         }
 
@@ -92,42 +93,33 @@ export default function Render2D({selectedTool, physicsEngine}) {
             const x = event.clientX - rect.left;
             const y = event.clientY - rect.top;
             const position = new Vector({x: x, y: y})
-            let found = false;
-            [...shapes].reverse().find(shape => {
-                if (found) return true;
-                const intersectData = shape.intersectPoint(position)
-                if (intersectData.doesIntersect){
-                    setSelectedObject(shape);
-                    setPreviousMousePosition(position);
-                    found = true;
-                    return false;
-                }
-            });
-            event.preventDefault();
+            const object = findClosestElement({mousePosition: position, objects: physicsEngine.objects})
+            setDraggingObject(object);
+            setPreviousMousePosition(position);
+            //event.preventDefault();
         }
 
         function handleMouseMove(event){
-            if (selectedObject && selectedTool === "select"){
+            if (draggingObject && selectedTool === "select"){
                 const x = event.clientX - rect.left;
                 const y = event.clientY - rect.top;
                 const position = new Vector({x: x, y: y});
-                selectedObject.position = position;
+                draggingObject.position = position;
                 setPreviousMousePosition(position);
-                //selectedObject.freeze();
             }
         }
 
         function handleMouseUp(event){
             // Apply velocity to object
-            if (selectedObject && selectedTool === "select"){
+            if (draggingObject && selectedTool === "select"){
                 const x = event.clientX - rect.left;
                 const y = event.clientY - rect.top;
                 const finalMousePosition = new Vector({x: x, y: y});
-                selectedObject.velocity = finalMousePosition.clone().subtract(previousMousePosition).multiply(30);
-                selectedObject.angularVelocity = 0;
-                selectedObject.torque = 0;
+                draggingObject.velocity = finalMousePosition.clone().subtract(previousMousePosition).multiply(30);
+                draggingObject.angularVelocity = 0;
+                draggingObject.torque = 0;
             }
-            setSelectedObject(null);
+            setDraggingObject(null);
             setPreviousMousePosition(null);
         }
 
@@ -138,9 +130,9 @@ export default function Render2D({selectedTool, physicsEngine}) {
             const x = event.clientX - rect.left;
             const y = event.clientY - rect.top; //rect.top;
 
-            const constant_size = physicsEngine.current.settings.size;
-            const constant_mass = physicsEngine.current.settings.mass * 100; // kg
-            const constant_velocity = physicsEngine.current.settings.velocity;
+            const constant_size = physicsEngine.settings.size;
+            const constant_mass = physicsEngine.settings.mass * 100; // kg
+            const constant_velocity = physicsEngine.settings.velocity;
 
             let object;
             if (selectedTool === "circle"){
@@ -150,8 +142,8 @@ export default function Render2D({selectedTool, physicsEngine}) {
                     mass: constant_mass,
                     drag: 0.47,
                     velocity: new Vector({x: 0, y: 0}),
-                    restitution: 10,
-                    color: "green",
+                    restitution: 0.9,
+                    color: "black",
                     friction: 0
                 });
             }
@@ -164,7 +156,7 @@ export default function Render2D({selectedTool, physicsEngine}) {
                     velocity: new Vector({x: 0, y: 0}),
                     restitution: 0.5,
                     color: "black",
-                    friction: 0.5,
+                    friction: 0.6,
                     rotation: 0
                 });
             }
@@ -186,7 +178,7 @@ export default function Render2D({selectedTool, physicsEngine}) {
             }
 
             /* Will detect if paused as well
-            physicsEngine.current.objects.every(obj => {
+            physicsEngine.objects.every(obj => {
                 const intersectData = object.intersect(obj);
                 if (intersectData.doesIntersect){
                     obj.color = "red";
@@ -199,30 +191,45 @@ export default function Render2D({selectedTool, physicsEngine}) {
             })
              */
 
-            physicsEngine.current.addObject(object)
-            setShapes(shapes => [...shapes, object]);
+            physicsEngine.addObject(object)
         }
 
         function handleElementSelect(event){
             const x = event.clientX - rect.left;
             const y = event.clientY - rect.top;
-            const position = new Vector({x: x, y: y})
-            let found = false;
-            [...shapes].reverse().find(shape => {
-                if (found) return true;
-                const intersectData = shape.intersectPoint(position)
-                if (intersectData.doesIntersect){
-                    physicsEngine.current.removeObject(shape)
-                    setShapes(shapes.filter(s => s !== shape));
-                    found = true;
-                    return false;
-                }
-            });
+            const closestObject = findClosestElement({mousePosition: new Vector({x: x, y:y}), objects: physicsEngine.objects})
+            const pagePosition = {x: event.pageX, y: event.pageY};
+            setSelectedObject({object: closestObject, position: pagePosition});
             event.preventDefault();
         }
 
+        // Mobile
+        function handleTouchStart(event){
+            handleMouseDown(event.touches[0]);
+        }
+
+        function handleTouchMove(event){
+            handleMouseMove(event.touches[0]);
+        }
+
+        function handleTouchEnd(event){
+            handleMouseUp(event.changedTouches[0]);
+        }
+
+        function handleTouchCancel(event){
+            handleMouseUp(event.changedTouches[0]);
+        }
+
+        // Add touch event listeners
+        canvas.addEventListener('touchstart', handleTouchStart);
+        canvas.addEventListener('touchmove', handleTouchMove);
+        canvas.addEventListener('touchend', handleTouchEnd);
+        canvas.addEventListener('touchcancel', handleTouchCancel);
+
+
         // Add click event listener
         canvas.addEventListener('click', handleClick);
+
         canvas.addEventListener('contextmenu', handleElementSelect);
 
         canvas.addEventListener('mousedown', handleMouseDown);
@@ -230,18 +237,30 @@ export default function Render2D({selectedTool, physicsEngine}) {
         canvas.addEventListener('mouseup', handleMouseUp);
 
         //shapes.forEach(shape => shape.draw(ctx));
-        physicsEngine.current.objects.forEach(object => object.draw(ctx));
+        physicsEngine.objects.forEach(object => object.draw(ctx));
 
 
 
         // Cleanup function
         return () => {
+            // Remove event listeners
             canvas.removeEventListener('click', handleClick);
             canvas.removeEventListener('contextmenu', handleElementSelect);
             canvas.removeEventListener('mousedown', handleMouseDown);
             canvas.removeEventListener('mousemove', handleMouseMove);
             canvas.removeEventListener('mouseup', handleMouseUp);
+
+            // Remove touch event listeners
+            canvas.removeEventListener('touchstart', handleTouchStart);
+            canvas.removeEventListener('touchmove', handleTouchMove);
+            canvas.removeEventListener('touchend', handleTouchEnd);
+            canvas.removeEventListener('touchcancel', handleTouchCancel);
         };
 
     }, [shapes, selectedTool]);
+
+
+    return (
+        <ObjectMenu selectedObject={selectedObject} setSelectedObject={setSelectedObject} physicsEngine={physicsEngine}/>
+    )
 }

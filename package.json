@@ -13,11 +13,12 @@
     "@heroicons/react": "^2.1.1",
     "@tailwindcss/forms": "^0.5.7",
     "@tailwindcss/typography": "^0.5.10",
+    "classnames": "^2.5.1",
     "eslint-config-next": "^14.0.4",
     "next": "^14.0.4",
     "node": "^21.2.0",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
   },
   "devDependencies": {
     "autoprefixer": "^10.0.1",

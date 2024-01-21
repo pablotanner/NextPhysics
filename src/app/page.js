@@ -5,13 +5,14 @@ import {
 } from '@heroicons/react/20/solid'
 import {WrenchIcon} from "@heroicons/react/16/solid";
 import Link from "next/link";
-import Render2D from "../physics/render2D.js";
 import ToolDropdown from "../components/ToolDropdown.js";
 import {useEffect, useRef, useState} from "react";
 import AboutModal from "../components/AboutModal.js";
 import PhysicsEngine from "@/physics/physicsEngine";
 import {Switch} from "@headlessui/react";
 import CurrentTool from "@/components/CurrentTool";
+import Render2D from "@/rendering/render2D";
+
 
 
 export default function Home() {
@@ -214,7 +215,7 @@ export default function Home() {
      */
 
 
-    return (<div className="container">
+    return (<div className="container" onContextMenu={(e) => {e.preventDefault()}}>
             <div className="lg:flex lg:items-center lg:justify-between">
                 <div className="min-w-0 flex-1">
                     <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">
@@ -250,7 +251,7 @@ export default function Home() {
             {settingsMenu}
             <div className="container py-5 h-full">
                 <Render2D selectedTool={selectedTool} setSelectedTool={setSelectedTool} settings={settings}
-                          physicsEngine={physicsEngine}/>
+                          physicsEngine={physicsEngine.current}/>
                 <canvas id="physicsCanvas"
                         style={{cursor: "pointer", height: "100%", width: "100%", border: "solid #4F46E5 2px"}}/>
             </div>

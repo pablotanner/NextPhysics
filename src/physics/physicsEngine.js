@@ -43,8 +43,8 @@ export default class PhysicsEngine {
                     hasIntersection.push(i)
                     hasIntersection.push(j)
                     // Change colors for visibility
-                    this.objects[i].color = "red";
-                    this.objects[j].color = "red";
+                    //this.objects[i].color = "red";
+                    //this.objects[j].color = "red";
 
                     // Resolve collision
                     this.objects[i].resolveCollision(this.objects[j], intersectData);
@@ -55,7 +55,7 @@ export default class PhysicsEngine {
         // Set all objects that don't have an intersection to black
         for (let i = 0; i < this.objects.length; i++) {
             if (hasIntersection.find(index => index === i) === undefined) {
-                this.objects[i].color = "black";
+                //this.objects[i].color = "black";
             }
         }
     }

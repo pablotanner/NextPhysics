@@ -142,7 +142,7 @@ export default function Render2D({selectedTool, physicsEngine}) {
                     mass: constant_mass,
                     drag: 0.47,
                     velocity: new Vector({x: 0, y: 0}),
-                    restitution: 0.9,
+                    restitution: 1,
                     color: "black",
                     friction: 0
                 });

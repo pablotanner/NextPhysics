@@ -14,7 +14,22 @@ export default class Plane extends PhysicsObject {
         this._drag = drag;
         this._surfaceArea = 1;
         this._objectType = objectTypes.LINE;
+        this._point = this._normal.clone().multiply(distance); // Add this line
+
     }
+
+    get point() {
+        return this._point;
+    }
+
+    set point(point) {
+        if (!(point instanceof Vector)) {
+            throw new Error("point must be an instance of Vector");
+        }
+        this._point = point;
+        this._distance = this._normal.getDotProduct(point); // Update the distance when the point changes
+    }
+
 
     get normal() {
         return this._normal;
@@ -28,6 +43,9 @@ export default class Plane extends PhysicsObject {
         if (!(normal instanceof Vector)) {
             throw new Error("normal must be an instance of Vector");
         }
+        this._normal = normal;
+        this._point = normal.clone().multiply(this._distance); // Update the point when the normal changes
+
     }
 
     set distance(distance) {

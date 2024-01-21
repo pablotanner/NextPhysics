@@ -170,8 +170,17 @@ export default class BoundingSphere extends PhysicsObject {
         const direction = intersectData.direction;
         const distance = intersectData.distance;
 
-        // Move the sphere out of the plane
-        this.position = this.position.clone().add(direction.clone().multiply(distance));
+        // Determine if the sphere is above or below the plane
+        const dotProduct = plane.normal.getDotProduct(this.center.clone().subtract(plane.point));
+
+        // If the dot product is negative, the sphere is below the plane
+        if (dotProduct < 0) {
+            // Move the sphere out of the plane by adding the displacement
+            this.position = this.position.clone().add(direction.clone().multiply(distance));
+        } else {
+            // Move the sphere out of the plane by subtracting the displacement
+            this.position = this.position.clone().subtract(direction.clone().multiply(distance));
+        }
 
         // Reflect the sphere's velocity about the plane's normal
         const reflectedVelocity = this.velocity.clone().reflect(direction);

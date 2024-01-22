@@ -27,12 +27,12 @@ export default function ObjectMenu({selectedObject, setSelectedObject, physicsEn
         function handleClickOutside(event) {
             if(modalRef.current && modalRef.current?.contains(event.target)) return;
 
+
             if (menuRef.current && !menuRef?.current?.contains(event.target)) {
-                setSelectedObject({object: null, position: {x: 0, y: 0}});
+                setSelectedObject({object: undefined, position: {x: 0, y: 0}});
             }
         }
-
-        document.addEventListener("mousedown", handleClickOutside);
+        //document.addEventListener("mousedown", handleClickOutside);
         return () => {
             document.removeEventListener("mousedown", handleClickOutside);
         };
@@ -41,7 +41,7 @@ export default function ObjectMenu({selectedObject, setSelectedObject, physicsEn
 
     function deleteObject(){
         physicsEngine.removeObject(object);
-        setSelectedObject({object: null, position: {x: 0, y: 0}});
+        setSelectedObject({object: undefined, position: {x: 0, y: 0}});
     }
 
     const inspectObject = () => {

@@ -14,8 +14,11 @@ export default function Render2D({selectedTool, physicsEngine}) {
     // Used for dragging objects
     const [draggingObject, setDraggingObject] = useState(null);
 
+    const [dragging, setDragging] = useState(false);
+
+
     // Used for selecting objects
-    const [selectedObject, setSelectedObject] = useState({object: null, position: {x: 0, y: 0}});
+    const [selectedObject, setSelectedObject] = useState({object: undefined, position: {x: 0, y: 0}});
 
     const [previousMousePosition, setPreviousMousePosition] = useState(null);
 
@@ -127,12 +130,24 @@ export default function Render2D({selectedTool, physicsEngine}) {
 
 
         function handleClick(event) {
+            if (selectedObject.object) {
+                setSelectedObject({object: undefined, position: {x: 0, y: 0}})
+            }
+
             const x = event.clientX - rect.left;
             const y = event.clientY - rect.top; //rect.top;
 
             const constant_size = physicsEngine.settings.size;
             const constant_mass = physicsEngine.settings.mass * 100; // kg
             const constant_velocity = physicsEngine.settings.velocity;
+
+            if (event.toString().includes("Touch")){
+                if (selectedTool === "select"){
+                    const closestObject = findClosestElement({mousePosition: new Vector({x: x, y:y}), objects: physicsEngine.objects})
+                    setSelectedObject({object: closestObject, position: {x: event.pageX, y: event.pageY}});
+                }
+                return;
+            }
 
             let object;
             if (selectedTool === "circle"){
@@ -173,28 +188,9 @@ export default function Render2D({selectedTool, physicsEngine}) {
                     friction: 0.1
                 });
             }
-            else if (selectedTool === "edit"){
-                const closestObject = findClosestElement({mousePosition: new Vector({x: x, y:y}), objects: physicsEngine.objects})
-                setSelectedObject({object: closestObject, position: {x: event.pageX, y: event.pageY}});
-                return;
-            }
             else {
                 return;
             }
-
-            /* Will detect if paused as well
-            physicsEngine.objects.every(obj => {
-                const intersectData = object.intersect(obj);
-                if (intersectData.doesIntersect){
-                    obj.color = "red";
-                    object.color = "red"
-                    return false;
-                }
-                else {
-                    return true;
-                }
-            })
-             */
 
             if (object){
                 physicsEngine.addObject(object)
@@ -211,18 +207,27 @@ export default function Render2D({selectedTool, physicsEngine}) {
         }
 
         function handleTouchStart(event){
-            //event.preventDefault();
+            setDragging(false);
             handleMouseDown(event.touches[0]);
         }
 
         function handleTouchMove(event){
-            event.preventDefault();
+            // If user is not on an object, allow them to use touchMove to scroll
+            if(draggingObject) {
+                event.preventDefault();
+            }
+            setDragging(true);
             handleMouseMove(event.touches[0]);
         }
 
         function handleTouchEnd(event){
-            //event.preventDefault();
-            handleMouseUp(event.changedTouches[0]);
+            if (!dragging) {
+                // It was a tap
+                handleClick(event.changedTouches[0]);
+            } else {
+                // It was a drag
+                handleMouseUp(event.changedTouches[0]);
+            }
         }
 
         function handleTouchCancel(event){
@@ -269,7 +274,6 @@ export default function Render2D({selectedTool, physicsEngine}) {
         };
 
     }, [shapes, selectedTool]);
-
 
     return (
         <ObjectMenu selectedObject={selectedObject} setSelectedObject={setSelectedObject} physicsEngine={physicsEngine}/>

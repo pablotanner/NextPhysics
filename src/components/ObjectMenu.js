@@ -48,7 +48,6 @@ export default function ObjectMenu({selectedObject, setSelectedObject, physicsEn
         return (
             <div className="flex flex-col cursor-default" onClick={() => setInspectMenuOpen(false)}>
                 <p className="text-sm text-gray-500">Position: {Math.round(object.position.vector.x)}, {Math.round(object.position.vector.y)}</p>
-                <p hidden className="text-sm text-gray-500">Velocity: {object.velocity.vector.x}, {object.velocity.vector.y}</p>
                 <p className="text-sm text-gray-500">Mass: {object.mass / 100}</p>
                 <p className="text-sm text-gray-500">Restitution: {object.restitution}</p>
                 <p className="text-sm text-gray-500">Drag: {object.drag}</p>

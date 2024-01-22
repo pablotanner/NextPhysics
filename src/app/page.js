@@ -1,17 +1,14 @@
 "use client"
 import "./globals.css"
 import {
-    LinkIcon, UserIcon
+    LinkIcon, UserIcon,WrenchIcon
 } from '@heroicons/react/20/solid'
-import {WrenchIcon} from "@heroicons/react/16/solid";
 import Link from "next/link";
-import ToolDropdown from "../components/ToolDropdown.js";
 import {useEffect, useRef, useState} from "react";
 import AboutModal from "../components/AboutModal.js";
 import PhysicsEngine from "@/physics/physicsEngine";
-import {Switch} from "@headlessui/react";
-import CurrentTool from "@/components/CurrentTool";
 import Render2D from "@/rendering/render2D";
+import Toolbar from "@/components/Toolbar";
 
 
 
@@ -31,37 +28,6 @@ export default function Home() {
         physicsEngine.current.settings = settings;
     }, [settings]);
 
-
-
-    const pauseToggle = (<Switch
-            checked={settings.paused}
-            onChange={() => {
-                setSettings({...settings, paused: !settings.paused})
-            }}
-            className={`${settings.paused ? 'bg-blue-600' : 'bg-gray-200'} relative inline-flex h-6 w-11 items-center rounded-full`}
-        >
-            <span className="sr-only">Enable notifications</span>
-            <span
-                className={`${settings.paused ? 'translate-x-6' : 'translate-x-1'} inline-block h-4 w-4 transform rounded-full bg-white transition`}
-            />
-        </Switch>)
-
-
-    /*
-    let settings = {
-        gravity: 9800,
-        //restitution: 0.8,
-        //friction: 0.5,
-        //airDensity: 1.2,
-        //dragCoefficient: 0.47,
-        //surfaceArea: 1,
-        mass: 1,
-        //radius: 1,
-        size: 30,
-        velocity: 1,
-    }
-
-     */
     const settingsMenu = (<form>
         <div className="mt-6 border-b border-gray-900/10 pb-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
@@ -85,6 +51,23 @@ export default function Home() {
                                 />
                             </div>
                         </div>
+
+                        <div className="mt-1">
+                            <label className="block text-sm font-medium text-gray-900">
+                                Air Density
+                            </label>
+                            <input
+                                type="number"
+                                min={0}
+                                max={100}
+                                value={settings.airDensity}
+                                name="airDensity"
+                                id="airDensity"
+                                onChange={(e) => setSettings({...settings, airDensity: Number(e.target.value)})}
+                                className="block w-full rounded-md border-0 py-1.5 px-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                            />
+                        </div>
+                        {/*
                         <div>
                             <label className="block text-sm font-medium text-gray-900">
                                 Pause Simulation
@@ -93,7 +76,9 @@ export default function Home() {
                                 {pauseToggle}
                             </div>
                         </div>
-                        <span className="mt-5">
+                        */}
+
+                        <span className="mt-6">
                                     <button
                                         type="button"
                                         className="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
@@ -104,7 +89,8 @@ export default function Home() {
                                         Reset Settings
                                     </button>
                         </span>
-                        <div className="mt-5">
+                        {/*
+                         <div className="mt-5">
                             <ToolDropdown setSelectedTool={setSelectedTool}/>
                         </div>
                         <div className="mt-3">
@@ -122,6 +108,7 @@ export default function Home() {
                                         Reset Env
                                     </button>
                         </span>
+                        */}
                     </div>
                 </div>
 
@@ -156,21 +143,6 @@ export default function Home() {
                                 id="Size"
                                 onChange={(e) => setSettings({...settings, size: Number(e.target.value)})}
                                 className="block w-full px-2 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                            />
-                        </div>
-                        <div className="mt-1">
-                            <label className="block text-sm font-medium text-gray-900">
-                                Air Density
-                            </label>
-                            <input
-                                type="number"
-                                min={0}
-                                max={100}
-                                value={settings.airDensity}
-                                name="airDensity"
-                                id="airDensity"
-                                onChange={(e) => setSettings({...settings, airDensity: Number(e.target.value)})}
-                                className="block w-full rounded-md border-0 py-1.5 px-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                             />
                         </div>
                         <div className="mt-1" hidden>
@@ -249,20 +221,18 @@ export default function Home() {
                 </div>
             </div>
             {settingsMenu}
-            <div className="container py-5 h-full">
+            <div className="container py-3 h-full w-full space-y-2">
+                <Toolbar
+                    selectedTool={selectedTool}
+                    setSelectedTool={setSelectedTool}
+                    resetEnvironment={() => physicsEngine.current.reset()}
+                    isPaused={settings.paused}
+                    pause={() =>  setSettings({...settings, paused: true})}
+                    play={() =>  setSettings({...settings, paused: false})}
+                />
                 <Render2D selectedTool={selectedTool} setSelectedTool={setSelectedTool} settings={settings}
                           physicsEngine={physicsEngine.current}/>
                 <canvas id="physicsCanvas"
-                        onTouchStart={(e) => {
-                            e.preventDefault();
-                        }}
-                        onTouchMove={(e) => {
-                            e.preventDefault();
-                        }}
-                        onTouchCancel={(e) => {
-                            e.preventDefault();
-                        }}
-
                         style={{cursor: "pointer", height: "100%", width: "100%", border: "solid #4F46E5 2px"}}/>
             </div>
         </div>)

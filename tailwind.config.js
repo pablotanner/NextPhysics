@@ -1,6 +1,8 @@
 /** @type {import('tailwindcss').Config} */
 
 const defaultTheme = require('tailwindcss/defaultTheme')
+const { blackA, mauve, violet } = require('@radix-ui/colors');
+
 
 module.exports = {
   content: [
@@ -12,6 +14,11 @@ module.exports = {
     extend: {
       fontFamily: {
         sans: ['Inter var', ...defaultTheme.fontFamily.sans],
+      },
+      colors: {
+        ...blackA,
+        ...mauve,
+        ...violet,
       }
     },
   },

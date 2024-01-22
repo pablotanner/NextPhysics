@@ -10,7 +10,7 @@ export default function Toolbar({selectedTool, setSelectedTool, resetEnvironment
                 className="absolute pb-5 pt-3 min-w-[220px] top-7 left-0 bg-white rounded-md p-[5px] shadow-[0px_10px_38px_-10px_rgba(22,_23,_24,_0.35),_0px_10px_20px_-15px_rgba(22,_23,_24,_0.2)]"
             >
                 <div  className="group text-[13px] leading-5 text-violet11 rounded flex items-center h-[25px] px-[10px] relative select-none outline-none data-[state=open]:bg-violet4 data-[state=open]:text-violet11 data-[highlighted]:bg-gradient-to-br data-[highlighted]:from-violet9 data-[highlighted]:to-violet10 data-[highlighted]:text-violet1 data-[highlighted]:data-[state=open]:text-violet1 data-[disabled]:text-mauve8 data-[disabled]:pointer-events-none">
-                    Right click (mobile: hold down) on an object to edit it
+                    Right click (tap on mobile) on an object to edit it
                 </div>
 
                 <div className="h-[1px] bg-violet6 m-[10px]"/>

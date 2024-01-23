@@ -16,7 +16,7 @@ export default function Home() {
     const [selectedTool, setSelectedTool] = useState("select");
 
     const defaultSettings = {
-        gravity: 9.8, mass: 1000, size: 30, velocity: 1, airDensity:1.225,  paused: false,
+        gravity: 9.8, mass: 1000, size: 30, velocity: 1, airDensity:0.5,  paused: false,
     }
 
     const [settings, setSettings] = useState(defaultSettings);

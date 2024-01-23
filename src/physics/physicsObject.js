@@ -201,8 +201,16 @@ export default class PhysicsObject {
         throw new Error("intersectPlane method must be implemented");
     }
 
+    intersectSquare(square){
+        throw new Error("intersectSquare method must be implemented");
+    }
+
     resolveCollisionPoint(point, intersectData){
         // Do nothing
+    }
+
+    resolveCollisionSquare(square, intersectData){
+        throw new Error("resolveCollisionSquare method must be implemented");
     }
 
     resolveCollisionSphere(sphere, intersectData){
@@ -229,6 +237,8 @@ export default class PhysicsObject {
                 return this.resolveCollisionAABB(other, intersectData);
             case ObjectTypes.LINE:
                 return this.resolveCollisionPlane(other, intersectData);
+            case ObjectTypes.SQUARE:
+                return this.resolveCollisionSquare(other, intersectData);
             default:
                 throw new Error("objectType not recognized");
         }
@@ -244,6 +254,8 @@ export default class PhysicsObject {
                 return this.intersectAABB(other);
             case ObjectTypes.LINE:
                 return this.intersectPlane(other);
+            case ObjectTypes.SQUARE:
+                return this.intersectSquare(other);
             default:
                 throw new Error("objectType not recognized");
         }

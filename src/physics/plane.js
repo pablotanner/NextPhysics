@@ -4,6 +4,7 @@ import Vector from "@/physics/vector";
 import BoundingSphere from "@/physics/boundingSphere";
 import AABB from "@/physics/aabb";
 import objectTypes from "@/physics/ObjectTypes";
+import intersectData from "@/physics/intersectData";
 
 
 export default class Plane extends PhysicsObject {
@@ -83,6 +84,14 @@ export default class Plane extends PhysicsObject {
         return new IntersectData(Math.abs(signedDistance) < 0, {x: 0, y: 0});
     }
 
+    intersectSquare(square) {
+        return square.intersectPlane(this);
+    }
+
+
+    resolveCollisionSquare(square, intersectData) {
+        square.resolveCollisionPlane(this, intersectData);
+    }
 
     resolveCollisionAABB(aabb, intersectData) {
         aabb.resolveCollisionPlane(this, intersectData);

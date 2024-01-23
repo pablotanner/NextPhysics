@@ -6,6 +6,7 @@ import AABB from "../physics/aabb.js";
 import Plane from "@/physics/plane";
 import ObjectMenu from "@/components/ObjectMenu";
 import findClosestElement from "@/rendering/utility/findClosestElement";
+import Square from "@/physics/square";
 
 export default function Render2D({selectedTool, physicsEngine}) {
 
@@ -153,13 +154,13 @@ export default function Render2D({selectedTool, physicsEngine}) {
             if (selectedTool === "circle"){
                 object = new BoundingSphere({
                     center: new Vector({x: x, y: y}),
-                    radius: constant_size,
+                    radius: constant_size/2,
                     mass: constant_mass,
                     drag: 0.47,
                     velocity: new Vector({x: 0, y: 0}),
-                    restitution: 1,
+                    restitution: 0.9,
                     color: "black",
-                    friction: 0
+                    friction: 0.1
                 });
             }
             else if (selectedTool === "square"){
@@ -167,13 +168,28 @@ export default function Render2D({selectedTool, physicsEngine}) {
                     minExtents: new Vector({x: x-constant_size/2, y: y-constant_size/2}),
                     maxExtents: new Vector({x: x+constant_size/2, y: y+constant_size/2}),
                     mass: constant_mass,
+                    drag: 0.75,
+                    velocity: new Vector({x: 0, y: 0}),
+                    restitution: 0.5,
+                    color: "black",
+                    friction: 0.6,
+                    rotation: 0,
+                    size: constant_size
+                });
+
+                /*
+                object = new Square({
+                    position: new Vector({x: x, y: y}),
+                    length: constant_size,
+                    mass: constant_mass,
                     drag: 1.05,
                     velocity: new Vector({x: 0, y: 0}),
                     restitution: 0.5,
                     color: "black",
                     friction: 0.6,
-                    rotation: 0
-                });
+                })
+
+                 */
             }
             else if (selectedTool === "plane"){
                 const dist = event.clientY - rect.top;
